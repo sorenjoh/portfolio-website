@@ -1,17 +1,20 @@
 /* ============================================
    Søren Johansen — Portfolio
-   Minimal, image-first design
+   Minimal, image-first, centered hero design
    ============================================ */
 
 :root {
-  --bg: #0a0a0a;
+  --bg: #000000;
   --text: #f2f2f0;
   --text-muted: #8a8a86;
   --line: rgba(242, 242, 240, 0.14);
   --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 * { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
@@ -20,100 +23,188 @@ body {
   font-family: var(--font);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 img { max-width: 100%; display: block; }
 a { color: inherit; text-decoration: none; }
 
 .wrap {
-  max-width: 1280px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 0 40px;
+  padding: 0 32px;
 }
 
-/* ---------- Header ---------- */
+:focus-visible {
+  outline: 1px solid var(--text);
+  outline-offset: 4px;
+}
+
+/* ---------- Entrance animation primitives ---------- */
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOnly {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.reveal {
+  opacity: 0;
+  animation: rise 1s var(--ease) forwards;
+  animation-delay: var(--d, 0ms);
+}
+
+/* ---------- Hero header ---------- */
 
 header.site-header {
-  padding: 34px 0;
-}
-
-.site-header .wrap {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 14px;
+  padding: 96px 0 68px;
+  text-align: center;
 }
 
 .site-title {
-  font-size: 0.95rem;
-  letter-spacing: 0.14em;
-  font-weight: 500;
+  display: inline-block;
+  font-weight: 800;
+  font-size: clamp(2.1rem, 8.4vw, 5.6rem);
+  line-height: 1;
+  letter-spacing: 0.085em;
+  text-indent: 0.085em;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.site-tagline {
+  margin: 22px 0 0;
+  font-size: clamp(0.6rem, 1.5vw, 0.72rem);
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  color: var(--text-muted);
 }
 
 nav.site-nav {
   display: flex;
-  gap: 26px;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 30px;
+  margin-top: 46px;
 }
 
 nav.site-nav a {
-  font-size: 0.85rem;
-  letter-spacing: 0.06em;
+  position: relative;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
   color: var(--text-muted);
-  transition: color 0.2s ease;
-  padding-bottom: 3px;
-  border-bottom: 1px solid transparent;
+  padding-bottom: 6px;
+  transition: color 0.45s var(--ease);
 }
 
-nav.site-nav a:hover,
-nav.site-nav a.active {
-  color: var(--text);
-  border-bottom-color: var(--text);
+nav.site-nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.5s var(--ease);
 }
 
-/* ---------- Filters (work page only) ---------- */
+nav.site-nav a:hover { color: var(--text); }
+nav.site-nav a:hover::after { transform: scaleX(1); }
+
+nav.site-nav a.active { color: var(--text); }
+nav.site-nav a.active::after { transform: scaleX(1); }
+
+/* subpages keep the same identity, a touch quieter */
+body.subpage header.site-header { padding: 74px 0 56px; }
+body.subpage .site-title { font-size: clamp(1.7rem, 6vw, 3.6rem); }
+
+/* ---------- Filters ---------- */
 
 .filter-bar {
   display: flex;
-  gap: 22px;
-  margin: 6px 0 40px;
+  justify-content: center;
+  gap: 26px;
+  margin: 0 0 40px;
 }
 
 .filter-bar button {
+  position: relative;
   background: none;
   border: none;
-  padding: 0 0 3px;
+  padding: 0 0 6px;
   color: var(--text-muted);
   font-family: var(--font);
-  font-size: 0.85rem;
-  letter-spacing: 0.06em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
   cursor: pointer;
-  border-bottom: 1px solid transparent;
+  transition: color 0.45s var(--ease);
+}
+
+.filter-bar button::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transition: transform 0.5s var(--ease);
 }
 
 .filter-bar button:hover { color: var(--text); }
-
-.filter-bar button.active {
-  color: var(--text);
-  border-bottom-color: var(--text);
-}
+.filter-bar button:hover::after { transform: scaleX(1); }
+.filter-bar button.active { color: var(--text); }
+.filter-bar button.active::after { transform: scaleX(1); }
 
 /* ---------- Project grid ---------- */
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 2px;
-  padding-bottom: 100px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding-bottom: 120px;
 }
 
 .card {
-  cursor: pointer;
   position: relative;
-  aspect-ratio: 4 / 3;
+  cursor: pointer;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #0d0d0d;
+  opacity: 0;
+  animation: rise 1.05s var(--ease) forwards;
+  animation-delay: calc(var(--i, 0) * 130ms + 260ms);
+}
+
+/* first tile reads as the reel — full width */
+.grid .card:first-child { grid-column: 1 / -1; }
+
+.card-media {
+  position: absolute;
+  inset: 0;
   background-size: cover;
   background-position: center;
-  overflow: hidden;
+  transform: scale(1);
+  transition: transform 1.1s var(--ease), filter 0.7s var(--ease);
+  filter: brightness(0.94);
+}
+
+.card:hover .card-media,
+.card:focus-visible .card-media {
+  transform: scale(1.045);
+  filter: brightness(0.62);
 }
 
 .card .overlay {
@@ -122,91 +213,148 @@ nav.site-nav a.active {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 22px;
-  background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0) 55%);
+  padding: 26px 28px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0) 60%);
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.55s var(--ease);
 }
 
-.card:hover .overlay { opacity: 1; }
+.card:hover .overlay,
+.card:focus-visible .overlay { opacity: 1; }
 
 .card h3 {
-  font-weight: 500;
-  font-size: 1.05rem;
-  margin: 0 0 4px;
+  font-weight: 600;
+  font-size: 1.15rem;
+  letter-spacing: 0.01em;
+  margin: 0 0 6px;
+  transform: translateY(10px);
+  transition: transform 0.6s var(--ease);
 }
 
 .card .sub {
-  font-size: 0.8rem;
-  color: rgba(242, 242, 240, 0.7);
-  letter-spacing: 0.04em;
+  font-size: 0.7rem;
+  color: rgba(242, 242, 240, 0.72);
+  letter-spacing: 0.16em;
   margin: 0;
   text-transform: uppercase;
+  transform: translateY(10px);
+  transition: transform 0.6s var(--ease) 0.05s;
 }
+
+.card:hover h3,
+.card:hover .sub,
+.card:focus-visible h3,
+.card:focus-visible .sub { transform: translateY(0); }
 
 .empty-state {
   grid-column: 1 / -1;
   text-align: center;
-  padding: 100px 20px;
+  padding: 90px 20px;
   color: var(--text-muted);
+  font-size: 0.9rem;
+  animation: fadeOnly 0.8s var(--ease) forwards;
 }
 
-/* ---------- Simple text pages (Bio / Contact) ---------- */
+/* touch devices have no hover — keep the captions readable */
+@media (hover: none) {
+  .card .overlay { opacity: 1; }
+  .card h3, .card .sub { transform: none; }
+}
+
+/* ---------- Simple text pages (Bio / Kontakt) ---------- */
 
 .page-content {
-  max-width: 640px;
-  padding: 40px 0 120px;
+  max-width: 620px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 10px 0 140px;
 }
 
+/* the nav already names the page — the heading stays for screen readers */
 .page-content h1 {
-  font-weight: 500;
-  font-size: 1.6rem;
-  margin: 0 0 28px;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .page-content p {
   color: var(--text-muted);
   font-size: 1.02rem;
-  margin: 0 0 20px;
+  line-height: 1.75;
+  margin: 0 0 22px;
 }
 
 .page-content .links {
-  margin-top: 36px;
+  margin-top: 44px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  gap: 16px;
 }
 
 .page-content .links a {
-  font-size: 0.95rem;
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 2px;
-  width: fit-content;
+  position: relative;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding-bottom: 5px;
+  color: var(--text);
 }
 
-.page-content .links a:hover { border-bottom-color: var(--text); }
+.page-content .links a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transition: transform 0.5s var(--ease);
+}
+
+.page-content .links a:hover::after { transform: scaleX(1); }
 
 /* ---------- Lightbox ---------- */
 
 .lightbox {
   position: fixed;
   inset: 0;
-  background: rgba(5, 5, 5, 0.96);
-  display: none;
+  background: rgba(0, 0, 0, 0.97);
+  display: flex;
   align-items: center;
   justify-content: center;
   z-index: 200;
   padding: 32px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.45s var(--ease), visibility 0.45s;
 }
 
-.lightbox.open { display: flex; }
+.lightbox.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
 
 .lightbox-inner {
-  max-width: 920px;
+  max-width: 960px;
   width: 100%;
   max-height: 88vh;
   overflow-y: auto;
+  transform: translateY(16px);
+  transition: transform 0.55s var(--ease);
 }
+
+.lightbox.open .lightbox-inner { transform: translateY(0); }
 
 .lightbox-media {
   width: 100%;
@@ -217,41 +365,58 @@ nav.site-nav a.active {
 .lightbox-media iframe,
 .lightbox-media img { width: 100%; height: 100%; object-fit: cover; border: none; }
 
-.lightbox-body { padding: 22px 4px 0; }
+.lightbox-body { padding: 24px 4px 0; text-align: center; }
 
-.lightbox-body h2 { font-weight: 500; font-size: 1.2rem; margin: 0 0 6px; }
-.lightbox-body p { color: var(--text-muted); margin: 0; }
+.lightbox-body h2 { font-weight: 600; font-size: 1.15rem; margin: 0 0 8px; }
+.lightbox-body p { color: var(--text-muted); margin: 0; font-size: 0.95rem; }
 
 .lightbox-close {
   position: fixed;
-  top: 30px;
-  right: 40px;
+  top: 26px;
+  right: 34px;
   background: none;
   border: none;
-  color: var(--text);
-  font-size: 1.8rem;
+  color: var(--text-muted);
+  font-size: 1.9rem;
   cursor: pointer;
   line-height: 1;
+  transition: color 0.4s var(--ease), transform 0.4s var(--ease);
 }
+
+.lightbox-close:hover { color: var(--text); transform: rotate(90deg); }
 
 /* ---------- Footer ---------- */
 
 footer {
   border-top: 1px solid var(--line);
-  padding: 24px 0;
+  padding: 26px 0;
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 footer .wrap {
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .reveal, .card, .empty-state {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .card-media, .card h3, .card .sub, .lightbox-inner { transition: none; transform: none !important; }
 }
 
 /* ============================================
-   Admin overlay panel
+   Admin overlay panel  (unchanged mechanism)
    ============================================ */
 
 .admin-overlay {
@@ -276,6 +441,7 @@ footer .wrap {
   width: 100%;
   max-width: 640px;
   padding: 32px;
+  text-align: left;
 }
 
 .admin-panel h2 {
@@ -314,7 +480,7 @@ footer .wrap {
 .admin-panel select,
 .admin-panel textarea {
   width: 100%;
-  background: var(--bg);
+  background: #0a0a0a;
   border: 1px solid var(--line);
   color: var(--text);
   padding: 9px 11px;
@@ -388,9 +554,21 @@ footer .wrap {
   cursor: pointer;
 }
 
+/* ---------- Responsive ---------- */
+
+@media (max-width: 860px) {
+  .grid { grid-template-columns: 1fr; gap: 12px; }
+  .grid .card:first-child { grid-column: auto; }
+}
+
 @media (max-width: 640px) {
   .wrap { padding: 0 20px; }
-  header.site-header { padding: 24px 0; }
-  .grid { grid-template-columns: 1fr; }
+  header.site-header { padding: 64px 0 46px; }
+  body.subpage header.site-header { padding: 54px 0 40px; }
+  .site-title { letter-spacing: 0.06em; text-indent: 0.06em; }
+  nav.site-nav { gap: 22px; margin-top: 34px; }
+  .lightbox { padding: 18px; }
+  .lightbox-close { top: 14px; right: 18px; }
   .admin-row { flex-direction: column; }
+  footer .wrap { justify-content: center; text-align: center; }
 }

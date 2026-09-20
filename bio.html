@@ -3,27 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bio — SØREN JOHANSEN</title>
+<title>Bio — Søren Johansen</title>
+<!-- Fallback hvis JS ikke er kørt endnu; stien styres fra SITE.favicon i script.js -->
+<link rel="icon" href="assets/favicon.ico" sizes="any">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-page="bio">
 
-<header class="site-header">
-  <div class="wrap">
-    <a href="index.html" class="site-title">SØREN JOHANSEN</a>
-    <nav class="site-nav">
-      <a href="index.html">Arbejde</a>
-      <a href="bio.html" class="active">Bio</a>
-      <a href="contact.html">Kontakt</a>
-    </nav>
-  </div>
-</header>
+<header class="site-header" id="site-header"></header>
 
 <main class="wrap">
-  <div class="page-content">
+  <div class="page-content reveal" style="--d:400ms">
     <h1>Bio</h1>
     <p>
       Jeg har filmet siden jeg var barn — altid ham med kameraet på hver tur,
@@ -39,14 +32,8 @@
   </div>
 </main>
 
-<footer>
-  <div class="wrap">
-    <span>© <span id="year"></span> Søren Johansen</span>
-    <span>København, Danmark</span>
-  </div>
-</footer>
+<footer id="site-footer"></footer>
 
 <script src="script.js"></script>
-<script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

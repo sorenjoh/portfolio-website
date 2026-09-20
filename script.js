@@ -1,11 +1,166 @@
 // ============================================================
 // Søren Johansen — Portfolio
-// Renders the work grid + lightbox, and hosts a hidden admin
+// Builds the shared chrome (header, nav, filterbar, footer,
+// lightbox), renders the work grid, and hosts a hidden admin
 // panel that writes straight back to projects.json on GitHub.
 // ============================================================
 
+// ------------------------------------------------------------
+// SITE — alt fælles indhold står ÉT sted.
+// Ret her, og det opdateres på alle sider automatisk.
+// ------------------------------------------------------------
+
+const SITE = {
+  name: "SØREN JOHANSEN",
+  tagline: "FILMPRODUCER / VIDEOREDAKTØR / FOTOGRAF",
+
+  // Fanebladsikon. Skift stien her, så følger alle sider med.
+  favicon: "assets/sj_icon.ico",
+
+  // Nøglen matcher data-page på <body> på hver side.
+  nav: [
+    { page: "work",    label: "Arbejde", href: "index.html" },
+    { page: "bio",     label: "Bio",     href: "bio.html" },
+    { page: "contact", label: "Kontakt", href: "contact.html" },
+  ],
+
+  // Filtre på forsiden. "value" skal matche category i projects.json.
+  categories: [
+    { value: "alle",  label: "Alle" },
+    { value: "video", label: "Video" },
+    { value: "foto",  label: "Foto" },
+  ],
+
+  footer: {
+    owner: "Søren Johansen",
+    location: "Baseret i — København, Danmark",
+  },
+
+  // Bruges på kontaktsiden.
+  contact: {
+    email: "din@email.dk",
+    links: [
+      { label: "Instagram", url: "https://instagram.com/" },
+      { label: "LinkedIn",  url: "https://linkedin.com/" },
+    ],
+  },
+};
+
 let allProjects = [];
 let activeCategory = "alle";
+
+// ------------------------------------------------------------
+// Fælles chrome — bygges på alle sider fra SITE ovenfor
+// ------------------------------------------------------------
+
+function currentPage() {
+  return document.body.dataset.page || "work";
+}
+
+function buildFavicon() {
+  if (!SITE.favicon) return;
+  let link = document.querySelector('link[rel~="icon"]');
+  if (!link) {
+    link = document.createElement("link");
+    link.rel = "icon";
+    document.head.appendChild(link);
+  }
+  link.href = SITE.favicon;
+}
+
+function buildHeader() {
+  const host = document.getElementById("site-header");
+  if (!host) return;
+  const page = currentPage();
+
+  const links = SITE.nav
+    .map(
+      (item) =>
+        `<a href="${item.href}"${item.page === page ? ' class="active"' : ""}>${escapeHtml(item.label)}</a>`
+    )
+    .join("");
+
+  host.innerHTML = `
+    <div class="wrap">
+      <a href="index.html" class="site-title reveal" style="--d:0ms">${escapeHtml(SITE.name)}</a>
+      <p class="site-tagline reveal" style="--d:140ms">${escapeHtml(SITE.tagline)}</p>
+      <nav class="site-nav reveal" style="--d:260ms">${links}</nav>
+    </div>`;
+}
+
+function buildFilterBar() {
+  const host = document.getElementById("filter-bar");
+  if (!host) return;
+
+  host.innerHTML = SITE.categories
+    .map(
+      (c) =>
+        `<button${c.value === activeCategory ? ' class="active"' : ""} data-category="${c.value}">${escapeHtml(c.label)}</button>`
+    )
+    .join("");
+}
+
+function buildContactLinks() {
+  const host = document.getElementById("contact-links");
+  if (!host) return;
+
+  const all = [
+    { label: SITE.contact.email, url: "mailto:" + SITE.contact.email, external: false },
+    ...SITE.contact.links.map((l) => ({ ...l, external: true })),
+  ];
+
+  host.innerHTML = all
+    .map(
+      (l) =>
+        `<a href="${l.url}"${l.external ? ' target="_blank" rel="noopener"' : ""}>${escapeHtml(l.label)}</a>`
+    )
+    .join("");
+}
+
+function buildFooter() {
+  const host = document.getElementById("site-footer");
+  if (!host) return;
+
+  host.innerHTML = `
+    <div class="wrap">
+      <span>© ${new Date().getFullYear()} ${escapeHtml(SITE.footer.owner)}</span>
+      <span>${escapeHtml(SITE.footer.location)}</span>
+    </div>`;
+}
+
+function buildLightbox() {
+  if (!document.getElementById("grid")) return; // kun nødvendig på arbejdssiden
+  if (document.getElementById("lightbox")) return;
+
+  const lb = document.createElement("div");
+  lb.className = "lightbox";
+  lb.id = "lightbox";
+  lb.innerHTML = `
+    <button class="lightbox-close" id="lightbox-close" aria-label="Luk">&times;</button>
+    <div class="lightbox-inner">
+      <div class="lightbox-media" id="lightbox-media"></div>
+      <div class="lightbox-body">
+        <h2 id="lightbox-title"></h2>
+        <p id="lightbox-desc"></p>
+      </div>
+    </div>`;
+  document.body.appendChild(lb);
+}
+
+function buildChrome() {
+  if (currentPage() !== "work") document.body.classList.add("subpage");
+  buildFavicon();
+  buildHeader();
+  buildFilterBar();
+  buildContactLinks();
+  buildFooter();
+  buildLightbox();
+}
+
+// script.js ligger sidst i <body>, så DOM'et ovenfor findes allerede.
+// Vi bygger med det samme — ingen blink, og animationerne starter samlet.
+buildChrome();
+
 
 // ---------- Public site: load + render ----------
 
@@ -34,12 +189,13 @@ function renderGrid() {
   }
 
   grid.innerHTML = filtered
-    .map((p) => {
+    .map((p, i) => {
       const bg = p.thumbnail
         ? `background-image:url('${p.thumbnail}')`
         : `background:linear-gradient(135deg, ${p.coverColor || "#222"}, #0a0a0a)`;
       return `
-        <article class="card" data-id="${p.id}" style="${bg}">
+        <article class="card" data-id="${p.id}" style="--i:${i}" tabindex="0" role="button" aria-label="${escapeHtml(p.title)}">
+          <div class="card-media" style="${bg}"></div>
           <div class="overlay">
             <h3>${escapeHtml(p.title)}</h3>
             <p class="sub">${p.category}${p.client ? " · " + escapeHtml(p.client) : ""}</p>
@@ -50,6 +206,12 @@ function renderGrid() {
 
   grid.querySelectorAll(".card").forEach((card) => {
     card.addEventListener("click", () => openLightbox(card.dataset.id));
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openLightbox(card.dataset.id);
+      }
+    });
   });
 }
 

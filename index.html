@@ -3,55 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SØREN JOHANSEN</title>
-<meta name="description" content="Portfolio af Søren Johansen — cinematographer og fotograf baseret i København.">
+<title>Søren Johansen</title>
+<meta name="description" content="Portfolio af Søren Johansen — cinematograf og fotograf baseret i København.">
+<!-- Fallback hvis JS ikke er kørt endnu; stien styres fra SITE.favicon i script.js -->
+<link rel="icon" href="assets/favicon.ico" sizes="any">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-page="work">
 
-<header class="site-header">
-  <div class="wrap">
-    <a href="index.html" class="site-title">SØREN JOHANSEN</a>
-    <nav class="site-nav">
-      <a href="index.html" class="active">Arbejde</a>
-      <a href="bio.html">Bio</a>
-      <a href="contact.html">Kontakt</a>
-    </nav>
-  </div>
-</header>
+<!-- Header, footer og lightbox bygges af script.js ud fra SITE-objektet. -->
+<header class="site-header" id="site-header"></header>
 
 <main class="wrap">
-  <div class="filter-bar">
-    <button class="active" data-category="alle">Alle</button>
-    <button data-category="video">Video</button>
-    <button data-category="foto">Foto</button>
-  </div>
-
+  <div class="filter-bar reveal" id="filter-bar" style="--d:380ms"></div>
   <div class="grid" id="grid"></div>
 </main>
 
-<footer>
-  <div class="wrap">
-    <span>© <span id="year"></span> Søren Johansen</span>
-    <span>København, Danmark</span>
-  </div>
-</footer>
-
-<div class="lightbox" id="lightbox">
-  <button class="lightbox-close" id="lightbox-close">&times;</button>
-  <div class="lightbox-inner">
-    <div class="lightbox-media" id="lightbox-media"></div>
-    <div class="lightbox-body">
-      <h2 id="lightbox-title"></h2>
-      <p id="lightbox-desc"></p>
-    </div>
-  </div>
-</div>
+<footer id="site-footer"></footer>
 
 <script src="script.js"></script>
-<script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>
