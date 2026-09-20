@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SØREN JOHANSEN</title>
-<meta name="description" content="Portfolio of Søren Johansen — cinematographer and photographer based in Copenhagen.">
+<title>Contact — SØREN JOHANSEN</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -16,21 +15,23 @@
   <div class="wrap">
     <a href="index.html" class="site-title">SØREN JOHANSEN</a>
     <nav class="site-nav">
-      <a href="index.html" class="active">Work</a>
+      <a href="index.html">Work</a>
       <a href="bio.html">Bio</a>
-      <a href="contact.html">Contact</a>
+      <a href="contact.html" class="active">Contact</a>
     </nav>
   </div>
 </header>
 
 <main class="wrap">
-  <div class="filter-bar">
-    <button class="active" data-category="alle">All</button>
-    <button data-category="video">Video</button>
-    <button data-category="foto">Foto</button>
+  <div class="page-content">
+    <h1>Contact</h1>
+    <p>Have a project in mind? Tell me a bit about it and I'll get back to you.</p>
+    <div class="links">
+      <a href="mailto:din@email.dk">din@email.dk</a>
+      <a href="https://instagram.com/" target="_blank">Instagram</a>
+      <a href="https://linkedin.com/" target="_blank">LinkedIn</a>
+    </div>
   </div>
-
-  <div class="grid" id="grid"></div>
 </main>
 
 <footer>
@@ -39,17 +40,6 @@
     <span>Copenhagen, Denmark</span>
   </div>
 </footer>
-
-<div class="lightbox" id="lightbox">
-  <button class="lightbox-close" id="lightbox-close">&times;</button>
-  <div class="lightbox-inner">
-    <div class="lightbox-media" id="lightbox-media"></div>
-    <div class="lightbox-body">
-      <h2 id="lightbox-title"></h2>
-      <p id="lightbox-desc"></p>
-    </div>
-  </div>
-</div>
 
 <script src="script.js"></script>
 <script>document.getElementById("year").textContent = new Date().getFullYear();</script>

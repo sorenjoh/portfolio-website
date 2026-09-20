@@ -1,79 +1,104 @@
 # Portfolio — Søren Johansen
 
-Simpel, hurtig portfolio-hjemmeside til video og foto. Bygget uden byggeværktøjer —
-bare rene HTML/CSS/JS-filer, så den er nem at hoste og redigere.
+A minimal, image-first portfolio. Three plain HTML pages, no build step,
+plus a hidden admin panel that writes changes straight back to GitHub.
 
-## Filer
+## Files
 
-- `index.html` — selve hjemmesiden
-- `style.css` — design
-- `script.js` — henter projekter fra `projects.json` og viser dem
-- `projects.json` — alle dine projekter (det er her indholdet bor)
-- `admin.html` — lokalt værktøj til at tilføje/redigere/slette projekter
-- `assets/` — læg dine egne billeder her, hvis du ikke linker til eksterne billeder
+- `index.html` — Work (the project grid, filterable by Video / Foto)
+- `bio.html` — Bio
+- `contact.html` — Contact
+- `style.css` — shared styling
+- `script.js` — grid rendering, lightbox, **and the admin panel**
+- `projects.json` — your project data (currently 3 placeholders)
+- `assets/` — put your own images here if you're not linking external ones
 
-## Sådan tilføjer/redigerer du projekter
+## How the admin panel works
 
-**Nemmeste metode (ingen værktøjer):** Åbn `projects.json` direkte i GitHub
-(tryk på blyant-ikonet for at redigere) og tilføj et nyt objekt til listen, f.eks.:
+You never edit `projects.json` by hand day-to-day. Instead:
 
-```json
-{
-  "id": "proj-003",
-  "title": "Bryllupsvideo — Anna & Mikkel",
-  "category": "video",
-  "client": "Privat kunde",
-  "year": "2026",
-  "description": "Highlight-video fra en bryllupsdag i København.",
-  "coverColor": "#3A6B65",
-  "videoUrl": "https://youtu.be/DIT-VIDEO-ID",
-  "thumbnail": ""
-}
+1. Open your live site.
+2. Open the browser console (F12, or Cmd+Opt+J on Mac).
+3. Type `admin()` and press enter.
+4. Enter your admin code. On the first correct entry per tab, the panel opens
+   on top of the page — no reload.
+5. The first time, fill in the **GitHub connection** fields (see setup below)
+   and add/edit/delete projects in the list.
+6. Click **Save changes** — this commits the updated `projects.json` directly
+   to your GitHub repo via the GitHub API. The grid on your current tab
+   updates immediately; the live site for everyone else catches up within
+   about a minute, once GitHub Pages redeploys.
+
+### One-time setup
+
+**1. Set your own admin code.** The code ships set to a placeholder
+(`changeme`) — change it before you publish. Open the browser console on any
+page (even opened locally) and run:
+
+```js
+crypto.subtle.digest("SHA-256", new TextEncoder().encode("your-secret-code"))
+  .then(b => console.log(Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, "0")).join("")))
 ```
 
-`category` skal være enten `"video"` eller `"foto"`. Vil du have flere kategorier
-(f.eks. "reklame" eller "fitness"), tilføj dem bare i `projects.json` og som en ny
-filter-knap i `index.html` (kopiér en af `<button data-category="...">`-linjerne).
+Copy the printed hash, then in `script.js` replace the value of
+`ADMIN_CODE_HASH` with it. Commit and push. Save the actual code (not the
+hash) in Bitwarden — that's the thing you'll type into the `prompt()` box.
 
-**Med værktøj (mere brugervenligt):** Åbn `admin.html` via en lokal server
-(fetch virker ikke hvis du blot dobbeltklikker filen). Nemmeste måde:
+Only the hash lives in the code, so anyone reading your site's source can't
+recover your code from it directly — though keep in mind this is still a
+public static site, so treat the code as light protection, not a vault.
 
-```bash
-# fra mappen med filerne
-python3 -m http.server 8000
-```
+**2. Create a GitHub personal access token.** This lets the panel commit on
+your behalf.
 
-Åbn så `http://localhost:8000/admin.html`, tilføj/redigér projekter, og tryk
-**"Download projects.json"**. Upload den downloadede fil til GitHub og overskriv
-den gamle.
+- Go to GitHub → Settings → Developer settings → Personal access tokens →
+  Fine-grained tokens → Generate new token.
+- Resource owner: your account. Repository access: **only select**
+  `portfolio-website`.
+- Permissions: **Contents → Read and write**. Nothing else.
+- Generate, and copy the token — you won't see it again.
 
-## Sådan lægger du billeder/video på
+**3. In the admin panel**, fill in:
+- **Owner**: `sorenjoh`
+- **Repo**: `portfolio-website`
+- **Branch**: `main`
+- **Token**: the one you just generated
 
-- **Billeder:** Læg filen i `assets/`, og skriv f.eks. `"thumbnail": "assets/mit-billede.jpg"`.
-- **Video:** Upload til YouTube eller Vimeo (kan sættes til "unlisted" hvis du ikke
-  vil have den offentligt søgbar), og sæt linket i `"videoUrl"`.
+These save to your browser's local storage after the first successful save,
+so you won't need to retype them next time on that device.
 
-## Sådan får du siden live med GitHub Pages
+⚠️ The token is stored only in your own browser (`localStorage`), never in
+the site's code or the repo. Don't paste it on a shared computer, and if a
+token ever leaks, revoke it from GitHub immediately and generate a new one.
 
-1. Gå til dit repo → **Settings → Pages**.
-2. Under "Build and deployment" vælg **Deploy from a branch**, branch `main`, mappe `/ (root)`.
-3. Efter et minuts tid ligger siden på `https://sorenjoh.github.io/portfolio-website/`.
+## Adding images or video
 
-## Sådan sætter du dit eget domæne op
+- **Images**: drop the file in `assets/`, then set `thumbnail` to
+  `assets/your-file.jpg` in the admin panel.
+- **Video**: upload to YouTube or Vimeo (unlisted is fine), paste the link
+  into the Video URL field.
 
-1. Køb et domæne (f.eks. hos One.com, Simply.com eller Namecheap).
-2. I repoet, opret en fil kaldet `CNAME` (ingen filendelse) med dit domæne som eneste
-   indhold, f.eks. `sorenjohansen.dk`.
-3. Hos din domæneudbyder, sæt disse DNS-records:
-   - Fire `A`-records på `@` der peger på GitHub Pages' IP'er:
+## Going live with GitHub Pages
+
+1. Repo → **Settings → Pages**.
+2. Under "Build and deployment", choose **Deploy from a branch**, branch
+   `main`, folder `/ (root)`.
+3. Your site is live at `https://sorenjoh.github.io/portfolio-website/`
+   within a minute.
+
+## Custom domain
+
+1. Buy a domain (One.com, Simply.com, Namecheap, etc.).
+2. Add a file named `CNAME` (no extension) to the repo root containing just
+   your domain, e.g. `sorenjohansen.dk`.
+3. At your domain registrar, set DNS:
+   - Four `A` records on `@` pointing to:
      `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
-   - Eller en `CNAME`-record på `www` der peger på `sorenjoh.github.io`
-4. I repoets **Settings → Pages**, indtast dit domæne under "Custom domain" og
-   vent på at GitHub verificerer det (kan tage op til et døgn). Slå "Enforce HTTPS" til
-   bagefter.
+   - A `CNAME` record on `www` pointing to `sorenjoh.github.io`
+4. In **Settings → Pages**, enter your domain under "Custom domain", wait for
+   verification (can take up to 24h), then enable "Enforce HTTPS".
 
-## Ret kontaktinfo
+## Editing contact details
 
-I `index.html`, find linjen med `mailto:din@email.dk` og skift til din rigtige mail.
-Overvej også at tilføje et par linjer om priser eller "svar inden for 24 timer" —
-det gør det nemmere for virksomheder at tage første skridt.
+In `contact.html`, replace `din@email.dk` and the Instagram/LinkedIn links
+with your real ones.

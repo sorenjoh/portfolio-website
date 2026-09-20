@@ -1,23 +1,34 @@
 [
   {
     "id": "proj-001",
-    "title": "Eksempel projekt — Restaurant reklame",
+    "title": "Placeholder — Restaurant Commercial",
     "category": "video",
-    "client": "Navn på kunde",
+    "client": "Client name",
     "year": "2026",
-    "description": "Kort beskrivelse af projektet — hvad blev filmet, og hvad var formålet med videoen.",
-    "coverColor": "#1B4B4F",
+    "description": "Replace this with a real project. Short line on what was filmed and for who.",
+    "coverColor": "#2b2b2b",
     "videoUrl": "",
     "thumbnail": ""
   },
   {
     "id": "proj-002",
-    "title": "Eksempel projekt — Portræt serie",
+    "title": "Placeholder — Portrait Series",
     "category": "foto",
-    "client": "Navn på kunde",
+    "client": "Client name",
     "year": "2026",
-    "description": "Kort beskrivelse af foto-serien — stemning, sted og formål.",
-    "coverColor": "#3A6B65",
+    "description": "Replace this with a real project. Short line on mood, location and purpose.",
+    "coverColor": "#3a3a3a",
+    "videoUrl": "",
+    "thumbnail": ""
+  },
+  {
+    "id": "proj-003",
+    "title": "Placeholder — Brand Film",
+    "category": "video",
+    "client": "Client name",
+    "year": "2026",
+    "description": "Replace this with a real project. Short line on the brief and outcome.",
+    "coverColor": "#232323",
     "videoUrl": "",
     "thumbnail": ""
   }
