@@ -9,38 +9,5 @@
     "videoUrl": "https://youtu.be/q7YZnLd6PiE",
     "thumbnail": "https://i.ytimg.com/vi/q7YZnLd6PiE/maxresdefault.jpg",
     "coverColor": "#a22020"
-  },
-  {
-    "id": "proj-001",
-    "title": "Placeholder — Restaurantreklame",
-    "category": "video",
-    "client": "Kundenavn",
-    "year": "2026",
-    "description": "Erstat med et rigtigt projekt. Kort linje om hvad der blev filmet, og for hvem.",
-    "coverColor": "#2b2b2b",
-    "videoUrl": "",
-    "thumbnail": ""
-  },
-  {
-    "id": "proj-002",
-    "title": "Placeholder — Portrætserie",
-    "category": "foto",
-    "client": "Kundenavn",
-    "year": "2026",
-    "description": "Erstat med et rigtigt projekt. Kort linje om stemning, sted og formål.",
-    "coverColor": "#3a3a3a",
-    "videoUrl": "",
-    "thumbnail": ""
-  },
-  {
-    "id": "proj-003",
-    "title": "Placeholder — Brandfilm",
-    "category": "video",
-    "client": "Kundenavn",
-    "year": "2026",
-    "description": "Erstat med et rigtigt projekt. Kort linje om opgaven og resultatet.",
-    "coverColor": "#232323",
-    "videoUrl": "",
-    "thumbnail": ""
   }
 ]
