@@ -29,7 +29,7 @@ function renderGrid() {
   );
 
   if (filtered.length === 0) {
-    grid.innerHTML = `<div class="empty-state">No projects in this category yet.</div>`;
+    grid.innerHTML = `<div class="empty-state">Ingen projekter i denne kategori endnu.</div>`;
     return;
   }
 
@@ -150,11 +150,11 @@ let adminEditingId = null;
 
 async function admin() {
   if (sessionStorage.getItem("admin-unlocked") !== "true") {
-    const code = prompt("Admin code:");
+    const code = prompt("Adminkode:");
     if (code === null) return;
     const hash = await sha256Hex(code);
     if (hash !== ADMIN_CODE_HASH) {
-      alert("Incorrect code.");
+      alert("Forkert kode.");
       return;
     }
     sessionStorage.setItem("admin-unlocked", "true");
@@ -193,13 +193,13 @@ function ensureAdminOverlay() {
     <div class="admin-panel">
       <button class="admin-close-x" id="admin-close-x">&times;</button>
       <h2>Admin</h2>
-      <p class="admin-sub">Add, edit or remove projects. Changes are written straight to projects.json on GitHub.</p>
+      <p class="admin-sub">Tilføj, redigér eller slet projekter. Ændringer skrives direkte til projects.json på GitHub.</p>
 
       <fieldset>
-        <legend>GitHub connection</legend>
+        <legend>GitHub-forbindelse</legend>
         <div class="admin-row">
           <div>
-            <label>Owner</label>
+            <label>Ejer (owner)</label>
             <input id="admin-owner" placeholder="sorenjoh">
           </div>
           <div>
@@ -213,56 +213,56 @@ function ensureAdminOverlay() {
             <input id="admin-branch" placeholder="main">
           </div>
           <div>
-            <label>Personal access token</label>
+            <label>Personligt adgangstoken</label>
             <input id="admin-token" type="password" placeholder="github_pat_...">
           </div>
         </div>
       </fieldset>
 
       <fieldset>
-        <legend id="admin-form-legend">New project</legend>
-        <label>Title</label>
+        <legend id="admin-form-legend">Nyt projekt</legend>
+        <label>Titel</label>
         <input id="f-title">
         <div class="admin-row">
           <div>
-            <label>Category</label>
+            <label>Kategori</label>
             <select id="f-category">
               <option value="video">Video</option>
               <option value="foto">Foto</option>
             </select>
           </div>
           <div>
-            <label>Year</label>
+            <label>År</label>
             <input id="f-year" placeholder="2026">
           </div>
         </div>
-        <label>Client</label>
+        <label>Kunde</label>
         <input id="f-client">
-        <label>Description</label>
+        <label>Beskrivelse</label>
         <textarea id="f-description"></textarea>
         <div class="admin-row">
           <div>
-            <label>Video URL (YouTube/Vimeo)</label>
+            <label>Video-link (YouTube/Vimeo)</label>
             <input id="f-videoUrl">
           </div>
           <div>
-            <label>Thumbnail URL</label>
+            <label>Billede-URL</label>
             <input id="f-thumbnail">
           </div>
         </div>
-        <label>Fallback color</label>
+        <label>Reservefarve</label>
         <input id="f-coverColor" type="color" value="#222222">
         <div class="admin-actions">
-          <button class="admin-btn primary" id="admin-save-item">Add to list</button>
-          <button class="admin-btn ghost" id="admin-cancel-edit" style="display:none;">Cancel edit</button>
+          <button class="admin-btn primary" id="admin-save-item">Tilføj til liste</button>
+          <button class="admin-btn ghost" id="admin-cancel-edit" style="display:none;">Annullér redigering</button>
         </div>
       </fieldset>
 
       <div id="admin-list"></div>
 
       <div class="admin-actions">
-        <button class="admin-btn primary" id="admin-save-changes">Save changes</button>
-        <button class="admin-btn ghost" id="admin-cancel-all">Close without saving</button>
+        <button class="admin-btn primary" id="admin-save-changes">Gem ændringer</button>
+        <button class="admin-btn ghost" id="admin-cancel-all">Luk uden at gemme</button>
       </div>
       <div class="admin-status" id="admin-status"></div>
     </div>
@@ -279,7 +279,7 @@ function ensureAdminOverlay() {
 function renderAdminList() {
   const list = document.getElementById("admin-list");
   if (adminDraft.length === 0) {
-    list.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">No projects yet.</p>`;
+    list.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">Ingen projekter endnu.</p>`;
     return;
   }
   list.innerHTML = adminDraft
@@ -301,7 +301,7 @@ function renderAdminList() {
 
 function saveAdminItem() {
   const title = document.getElementById("f-title").value.trim();
-  if (!title) { alert("Title is required."); return; }
+  if (!title) { alert("Titel er påkrævet."); return; }
 
   const data = {
     id: adminEditingId || "proj-" + Date.now(),
@@ -330,7 +330,7 @@ function editAdminItem(id) {
   const p = adminDraft.find((proj) => proj.id === id);
   if (!p) return;
   adminEditingId = id;
-  document.getElementById("admin-form-legend").textContent = "Edit project";
+  document.getElementById("admin-form-legend").textContent = "Redigér projekt";
   document.getElementById("f-title").value = p.title;
   document.getElementById("f-category").value = p.category;
   document.getElementById("f-year").value = p.year || "";
@@ -343,14 +343,14 @@ function editAdminItem(id) {
 }
 
 function deleteAdminItem(id) {
-  if (!confirm("Delete this project?")) return;
+  if (!confirm("Slet dette projekt?")) return;
   adminDraft = adminDraft.filter((p) => p.id !== id);
   renderAdminList();
 }
 
 function resetAdminForm() {
   adminEditingId = null;
-  document.getElementById("admin-form-legend").textContent = "New project";
+  document.getElementById("admin-form-legend").textContent = "Nyt projekt";
   ["f-title", "f-year", "f-client", "f-description", "f-videoUrl", "f-thumbnail"].forEach(
     (id) => (document.getElementById(id).value = "")
   );
@@ -369,13 +369,13 @@ async function saveChangesToGitHub() {
   };
 
   if (!cfg.owner || !cfg.repo || !cfg.token) {
-    status.textContent = "Fill in owner, repo and token first.";
+    status.textContent = "Udfyld ejer, repo og token først.";
     status.className = "admin-status err";
     return;
   }
 
   setAdminConfig(cfg);
-  status.textContent = "Saving…";
+  status.textContent = "Gemmer…";
   status.className = "admin-status";
 
   try {
@@ -385,7 +385,7 @@ async function saveChangesToGitHub() {
     const getRes = await fetch(`${apiBase}?ref=${cfg.branch}`, {
       headers: { Authorization: `Bearer ${cfg.token}`, Accept: "application/vnd.github+json" },
     });
-    if (!getRes.ok) throw new Error(`Could not read current file (${getRes.status})`);
+    if (!getRes.ok) throw new Error(`Kunne ikke læse den nuværende fil (${getRes.status})`);
     const getData = await getRes.json();
 
     // 2. push updated content
@@ -404,18 +404,18 @@ async function saveChangesToGitHub() {
     });
     if (!putRes.ok) {
       const errBody = await putRes.json().catch(() => ({}));
-      throw new Error(errBody.message || `GitHub rejected the update (${putRes.status})`);
+      throw new Error(errBody.message || `GitHub afviste opdateringen (${putRes.status})`);
     }
 
     // 3. reflect the change immediately in this tab, no reload needed
     allProjects = adminDraft;
     renderGrid();
 
-    status.textContent = "Saved. Live on the site within a minute or so.";
+    status.textContent = "Gemt. Er live på siden inden for et minuts tid.";
     status.className = "admin-status ok";
   } catch (err) {
     console.error(err);
-    status.textContent = "Save failed: " + err.message;
+    status.textContent = "Kunne ikke gemme: " + err.message;
     status.className = "admin-status err";
   }
 }
