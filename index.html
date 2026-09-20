@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Søren Johansen — Cinematographer & Fotograf</title>
+<meta name="description" content="Freelance cinematographer og fotograf baseret i København. Video, foto og content til brands, restauranter og virksomheder.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="#" class="logo">Søren Johansen</a>
+    <nav class="site-nav">
+      <a href="#work">Arbejde</a>
+      <a href="#contact">Kontakt</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <p class="kicker">Cinematographer &amp; fotograf — København</p>
+    <h1>Jeg fanger historier, der ser lige så godt ud som de føles.</h1>
+    <p class="lede">
+      Freelance video og foto til brands, restauranter, hoteller og alt derimellem.
+      Filmet siden jeg var 10 år — i dag arbejder jeg med kunder der vil have
+      cinematisk storytelling, der rent faktisk konverterer.
+    </p>
+    <div class="cta-row">
+      <a href="#work" class="btn btn-primary">Se mit arbejde</a>
+      <a href="#contact" class="btn btn-ghost">Book et projekt</a>
+    </div>
+  </div>
+</section>
+
+<section id="work" class="wrap">
+  <div class="filter-bar">
+    <button class="active" data-category="alle">Alle</button>
+    <button data-category="video">Video</button>
+    <button data-category="foto">Foto</button>
+  </div>
+
+  <div class="grid" id="grid">
+    <!-- Projekter indsættes her via script.js -->
+  </div>
+</section>
+
+<section id="contact" class="contact">
+  <div class="wrap">
+    <h2>Har du et projekt i tankerne?</h2>
+    <p>Skriv til mig, så finder vi ud af hvad du har brug for — om det er en enkelt video, en fotoserie eller et fast samarbejde.</p>
+    <a href="mailto:din@email.dk" class="btn btn-primary">din@email.dk</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap" style="display:flex; justify-content:space-between; width:100%; flex-wrap:wrap; gap:8px;">
+    <span>© <span id="year"></span> Søren Johansen</span>
+    <span>København, Danmark</span>
+  </div>
+</footer>
+
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-inner">
+    <button class="lightbox-close" id="lightbox-close">&times;</button>
+    <div class="lightbox-media" id="lightbox-media"></div>
+    <div class="lightbox-body">
+      <h2 id="lightbox-title"></h2>
+      <p id="lightbox-desc"></p>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+<script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

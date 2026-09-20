@@ -1,0 +1,24 @@
+[
+  {
+    "id": "proj-001",
+    "title": "Eksempel projekt — Restaurant reklame",
+    "category": "video",
+    "client": "Navn på kunde",
+    "year": "2026",
+    "description": "Kort beskrivelse af projektet — hvad blev filmet, og hvad var formålet med videoen.",
+    "coverColor": "#1B4B4F",
+    "videoUrl": "",
+    "thumbnail": ""
+  },
+  {
+    "id": "proj-002",
+    "title": "Eksempel projekt — Portræt serie",
+    "category": "foto",
+    "client": "Navn på kunde",
+    "year": "2026",
+    "description": "Kort beskrivelse af foto-serien — stemning, sted og formål.",
+    "coverColor": "#3A6B65",
+    "videoUrl": "",
+    "thumbnail": ""
+  }
+]
