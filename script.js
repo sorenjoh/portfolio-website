@@ -129,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // SHA-256 hash of the passcode. Default hashes "changeme" —
 // change this before you publish. See README.md for how to
 // generate a new hash for your own passcode.
-const ADMIN_CODE_HASH = "057ba03d6c44104863dc7361fe4578965d1887360f90a0895882e58a6248fc86";
+const ADMIN_CODE_HASH = "c97adc4e1b1538e64cf507f8cdf426ef29de2f712af96b38251506d84e2e0c31";
 
 async function sha256Hex(text) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
