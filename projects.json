@@ -1,5 +1,16 @@
 [
   {
+    "id": "proj-1789935134173",
+    "title": "Pizza Restaurant",
+    "category": "video",
+    "year": "2026",
+    "client": "Sams Pizza",
+    "description": "Commercial video showing off the making of their delicious pizzas in a cinematic matter.",
+    "videoUrl": "https://youtu.be/q7YZnLd6PiE",
+    "thumbnail": "https://i.ytimg.com/vi/q7YZnLd6PiE/maxresdefault.jpg",
+    "coverColor": "#a22020"
+  },
+  {
     "id": "proj-001",
     "title": "Placeholder — Restaurant Commercial",
     "category": "video",
