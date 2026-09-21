@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "id": "proj-1790019837738",
+    "title": "Pizza Commercial",
+    "category": "video",
+    "year": "2026",
+    "client": "Sams Pizza",
+    "description": "",
+    "videoUrl": "https://youtu.be/OmQ-1oOcdMw",
+    "thumbnail": "assets/1790019829533-samscommercial-thumbnail.jpg",
+    "coverColor": "#222222"
+  }
+]
