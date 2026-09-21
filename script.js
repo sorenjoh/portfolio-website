@@ -19,7 +19,7 @@ const SITE = {
 
   // Nøglen matcher data-page på <body> på hver side.
   nav: [
-    { page: "work",    label: "Arbejde", href: "index.html" },
+    { page: "work",    label: "Arbejde", href: "./" },
     { page: "bio",     label: "Bio",     href: "bio.html" },
     { page: "contact", label: "Kontakt", href: "contact.html" },
   ],
@@ -82,7 +82,7 @@ function buildHeader() {
 
   host.innerHTML = `
     <div class="wrap">
-      <a href="index.html" class="site-title reveal" style="--d:0ms">${escapeHtml(SITE.name)}</a>
+      <a href="./" class="site-title reveal" style="--d:0ms">${escapeHtml(SITE.name)}</a>
       <p class="site-tagline reveal" style="--d:140ms">${escapeHtml(SITE.tagline)}</p>
       <nav class="site-nav reveal" style="--d:260ms">${links}</nav>
     </div>`;
