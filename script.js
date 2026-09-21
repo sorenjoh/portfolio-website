@@ -410,6 +410,11 @@ function ensureAdminOverlay() {
           <div>
             <label>Billede-URL</label>
             <input id="f-thumbnail">
+            <div class="admin-upload-row">
+              <label class="admin-upload-btn" for="f-thumbnail-upload">Upload billede</label>
+              <input type="file" id="f-thumbnail-upload" accept="image/*">
+            </div>
+            <p class="admin-field-status" id="f-thumbnail-status"></p>
           </div>
         </div>
         <label>Reservefarve</label>
@@ -436,6 +441,7 @@ function ensureAdminOverlay() {
   document.getElementById("admin-cancel-edit").addEventListener("click", resetAdminForm);
   document.getElementById("admin-save-item").addEventListener("click", saveAdminItem);
   document.getElementById("admin-save-changes").addEventListener("click", saveChangesToGitHub);
+  document.getElementById("f-thumbnail-upload").addEventListener("change", handleThumbnailUpload);
 }
 
 function renderAdminList() {
@@ -469,7 +475,7 @@ function saveAdminItem() {
     id: adminEditingId || "proj-" + Date.now(),
     title,
     category: document.getElementById("f-category").value,
-    year: document.getElementById("f-year").value.trim(),
+    year: valueOrPlaceholder("f-year"),
     client: document.getElementById("f-client").value.trim(),
     description: document.getElementById("f-description").value.trim(),
     videoUrl: document.getElementById("f-videoUrl").value.trim(),
@@ -501,6 +507,7 @@ function editAdminItem(id) {
   document.getElementById("f-videoUrl").value = p.videoUrl || "";
   document.getElementById("f-thumbnail").value = p.thumbnail || "";
   document.getElementById("f-coverColor").value = p.coverColor || "#222222";
+  document.getElementById("f-thumbnail-status").textContent = "";
   document.getElementById("admin-cancel-edit").style.display = "inline-block";
 }
 
@@ -518,15 +525,92 @@ function resetAdminForm() {
   );
   document.getElementById("f-category").value = "video";
   document.getElementById("f-coverColor").value = "#222222";
+  document.getElementById("f-thumbnail-status").textContent = "";
   document.getElementById("admin-cancel-edit").style.display = "none";
+}
+
+// Reads an input's value; if left empty, falls back to its placeholder
+// text (so the greyed-out example shown in the box is used as-is).
+function valueOrPlaceholder(id) {
+  const el = document.getElementById(id);
+  if (!el) return "";
+  const v = el.value.trim();
+  return v || el.placeholder || "";
+}
+
+// ---------- Image upload (stores files in assets/ on GitHub) ----------
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(",")[1]); // strip data:...;base64,
+    reader.onerror = () => reject(new Error("Kunne ikke læse filen."));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadImageToGitHub(file) {
+  const cfg = {
+    owner: valueOrPlaceholder("admin-owner"),
+    repo: valueOrPlaceholder("admin-repo"),
+    branch: valueOrPlaceholder("admin-branch"),
+    token: document.getElementById("admin-token").value.trim(),
+  };
+  if (!cfg.owner || !cfg.repo || !cfg.token) {
+    throw new Error("Udfyld GitHub-forbindelsen ovenfor først.");
+  }
+
+  const safeName = file.name.toLowerCase().replace(/[^a-z0-9.\-_]/g, "-");
+  const path = `assets/${Date.now()}-${safeName}`;
+  const apiBase = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`;
+  const base64 = await fileToBase64(file);
+
+  const putRes = await fetch(apiBase, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${cfg.token}`, Accept: "application/vnd.github+json" },
+    body: JSON.stringify({
+      message: `Upload billede ${safeName} via admin panel`,
+      content: base64,
+      branch: cfg.branch,
+    }),
+  });
+
+  if (!putRes.ok) {
+    const errBody = await putRes.json().catch(() => ({}));
+    throw new Error(errBody.message || `Upload fejlede (${putRes.status})`);
+  }
+
+  return path;
+}
+
+async function handleThumbnailUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const statusEl = document.getElementById("f-thumbnail-status");
+  statusEl.textContent = "Uploader…";
+  statusEl.className = "admin-field-status";
+
+  try {
+    const path = await uploadImageToGitHub(file);
+    document.getElementById("f-thumbnail").value = path;
+    statusEl.textContent = "Uploadet: " + path;
+    statusEl.className = "admin-field-status ok";
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = "Fejl: " + err.message;
+    statusEl.className = "admin-field-status err";
+  } finally {
+    e.target.value = ""; // allow re-selecting the same file later
+  }
 }
 
 async function saveChangesToGitHub() {
   const status = document.getElementById("admin-status");
   const cfg = {
-    owner: document.getElementById("admin-owner").value.trim(),
-    repo: document.getElementById("admin-repo").value.trim(),
-    branch: document.getElementById("admin-branch").value.trim() || "main",
+    owner: valueOrPlaceholder("admin-owner"),
+    repo: valueOrPlaceholder("admin-repo"),
+    branch: valueOrPlaceholder("admin-branch"),
     token: document.getElementById("admin-token").value.trim(),
   };
 

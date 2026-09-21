@@ -543,6 +543,36 @@ footer .wrap {
 .admin-status.ok { color: #7fbf7f; }
 .admin-status.err { color: #e08787; }
 
+.admin-field-status {
+  font-size: 0.76rem;
+  margin-top: 6px;
+  color: var(--text-muted);
+}
+
+.admin-field-status.ok { color: #7fbf7f; }
+.admin-field-status.err { color: #e08787; }
+
+.admin-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.admin-upload-row label.admin-upload-btn {
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.admin-upload-row label.admin-upload-btn:hover { border-color: var(--text-muted); }
+
+.admin-upload-row input[type="file"] { display: none; }
+
 .admin-close-x {
   position: absolute;
   top: 22px;
