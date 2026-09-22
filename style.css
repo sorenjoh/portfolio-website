@@ -543,6 +543,96 @@ footer .wrap {
 .admin-status.ok { color: #7fbf7f; }
 .admin-status.err { color: #e08787; }
 
+.admin-field-status {
+  font-size: 0.76rem;
+  margin-top: 6px;
+  color: var(--text-muted);
+}
+
+.admin-field-status.ok { color: #7fbf7f; }
+.admin-field-status.err { color: #e08787; }
+
+.admin-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.admin-upload-row .admin-upload-btn {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 4px;
+  font-family: var(--font);
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.admin-upload-row .admin-upload-btn:hover { border-color: var(--text-muted); }
+
+.admin-upload-row input[type="file"] { display: none; }
+
+/* ---------- Asset library picker ---------- */
+
+.asset-picker-overlay { z-index: 1100; }
+
+.asset-picker-panel { max-width: 720px; }
+
+.asset-picker-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.asset-picker-controls > div { flex: 1; min-width: 160px; }
+
+.asset-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+  gap: 10px;
+  max-height: 380px;
+  overflow-y: auto;
+  margin-top: 14px;
+  padding-right: 4px;
+}
+
+.asset-picker-item {
+  background: #0a0a0a;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--text);
+  font-family: var(--font);
+  text-align: left;
+}
+
+.asset-picker-item:hover { border-color: var(--text-muted); }
+
+.asset-picker-item img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 3px;
+  background: #1a1a1a;
+}
+
+.asset-picker-item span {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .admin-close-x {
   position: absolute;
   top: 22px;
