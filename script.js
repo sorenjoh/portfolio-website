@@ -36,6 +36,9 @@ const SITE = {
     location: "Baseret i — København, Danmark",
   },
 
+  // Standard-lydstyrke for YouTube-videoer i lightboxen (0-100).
+  defaultVolume: 30,
+
   // Bruges på kontaktsiden.
   contact: {
     email: "din@email.dk",
@@ -48,6 +51,8 @@ const SITE = {
 
 let allProjects = [];
 let activeCategory = "alle";
+let currentVolume = SITE.defaultVolume;
+let ytPlayer = null;
 
 // ------------------------------------------------------------
 // Fælles chrome — bygges på alle sider fra SITE ovenfor
@@ -139,12 +144,24 @@ function buildLightbox() {
     <button class="lightbox-close" id="lightbox-close" aria-label="Luk">&times;</button>
     <div class="lightbox-inner">
       <div class="lightbox-media" id="lightbox-media"></div>
+      <div class="lightbox-volume" id="lightbox-volume" style="display:none;">
+        <span class="volume-icon">🔊</span>
+        <input type="range" id="volume-slider" min="0" max="100" value="${SITE.defaultVolume}">
+        <span id="volume-value">${SITE.defaultVolume}%</span>
+      </div>
       <div class="lightbox-body">
         <h2 id="lightbox-title"></h2>
         <p id="lightbox-desc"></p>
       </div>
     </div>`;
   document.body.appendChild(lb);
+
+  document.getElementById("volume-slider").addEventListener("input", (e) => {
+    const value = Number(e.target.value);
+    currentVolume = value;
+    document.getElementById("volume-value").textContent = value + "%";
+    if (ytPlayer && ytPlayer.setVolume) ytPlayer.setVolume(value);
+  });
 }
 
 function buildChrome() {
@@ -194,7 +211,7 @@ function renderGrid() {
         ? `background-image:url('${p.thumbnail}')`
         : `background:linear-gradient(135deg, ${p.coverColor || "#222"}, #0a0a0a)`;
       return `
-        <article class="card" data-id="${p.id}" style="--i:${i}" tabindex="0" role="button" aria-label="${escapeHtml(p.title || p.category)}">
+        <article class="card card-${p.category}" data-id="${p.id}" style="--i:${i}" tabindex="0" role="button" aria-label="${escapeHtml(p.title || p.category)}">
           <div class="card-media" style="${bg}"></div>
           <div class="overlay">
             ${p.title ? `<h3>${escapeHtml(p.title)}</h3>` : ""}
@@ -220,12 +237,25 @@ function openLightbox(id) {
   if (!p) return;
 
   const mediaEl = document.getElementById("lightbox-media");
-  if (p.category === "video" && p.videoUrl) {
-    mediaEl.innerHTML = `<iframe src="${toEmbedUrl(p.videoUrl)}" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
-  } else if (p.thumbnail) {
-    mediaEl.innerHTML = `<img src="${p.thumbnail}" alt="${escapeHtml(p.title || "Uden titel")}">`;
+  const volumeEl = document.getElementById("lightbox-volume");
+  const youTubeId = p.category === "video" && p.videoUrl ? extractYouTubeId(p.videoUrl) : null;
+
+  if (youTubeId) {
+    mediaEl.innerHTML = `<div id="yt-player"></div>`;
+    volumeEl.style.display = "flex";
+    document.getElementById("volume-slider").value = currentVolume;
+    document.getElementById("volume-value").textContent = currentVolume + "%";
+    loadYouTubePlayer(youTubeId);
   } else {
-    mediaEl.innerHTML = `<div style="width:100%;height:100%;background:linear-gradient(135deg, ${p.coverColor || "#222"}, #0a0a0a)"></div>`;
+    volumeEl.style.display = "none";
+    if (p.category === "video" && p.videoUrl) {
+      // Non-YouTube video link (e.g. Vimeo) — plain embed, no volume control available.
+      mediaEl.innerHTML = `<iframe src="${toEmbedUrl(p.videoUrl)}" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+    } else if (p.thumbnail) {
+      mediaEl.innerHTML = `<img src="${p.thumbnail}" alt="${escapeHtml(p.title || "Uden titel")}">`;
+    } else {
+      mediaEl.innerHTML = `<div style="width:100%;height:100%;background:linear-gradient(135deg, ${p.coverColor || "#222"}, #0a0a0a)"></div>`;
+    }
   }
 
   document.getElementById("lightbox-title").textContent = p.title || "Uden titel";
@@ -238,6 +268,56 @@ function closeLightbox() {
   if (!lb) return;
   lb.classList.remove("open");
   document.getElementById("lightbox-media").innerHTML = "";
+  document.getElementById("lightbox-volume").style.display = "none";
+  if (ytPlayer && ytPlayer.destroy) ytPlayer.destroy();
+  ytPlayer = null;
+}
+
+// ---------- YouTube Player API (needed for real volume control) ----------
+
+let ytApiLoading = false;
+let pendingYouTubeId = null;
+
+function extractYouTubeId(url) {
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes("youtu.be")) return u.pathname.slice(1) || null;
+    if (u.hostname.includes("youtube.com")) return u.searchParams.get("v");
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function loadYouTubePlayer(videoId) {
+  if (window.YT && window.YT.Player) {
+    createYouTubePlayer(videoId);
+    return;
+  }
+  pendingYouTubeId = videoId;
+  if (ytApiLoading) return;
+  ytApiLoading = true;
+  const tag = document.createElement("script");
+  tag.src = "https://www.youtube.com/iframe_api";
+  document.head.appendChild(tag);
+  window.onYouTubeIframeAPIReady = () => {
+    if (pendingYouTubeId) createYouTubePlayer(pendingYouTubeId);
+  };
+}
+
+function createYouTubePlayer(videoId) {
+  // In case the lightbox was closed/reopened while the API was still loading.
+  if (!document.getElementById("yt-player")) return;
+  ytPlayer = new YT.Player("yt-player", {
+    videoId,
+    playerVars: { autoplay: 1, rel: 0 },
+    events: {
+      onReady: (e) => {
+        e.target.setVolume(currentVolume);
+        e.target.playVideo();
+      },
+    },
+  });
 }
 
 function toEmbedUrl(url) {
