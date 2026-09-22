@@ -37,14 +37,13 @@ const SITE = {
   },
 
   // Standard-lydstyrke for YouTube-videoer i lightboxen (0-100).
-  defaultVolume: 30,
+  defaultVolume: 15,
 
   // Bruges på kontaktsiden.
   contact: {
-    email: "din@email.dk",
+    email: "soren@sorenfoto.com",
     links: [
-      { label: "Instagram", url: "https://instagram.com/" },
-      { label: "LinkedIn",  url: "https://linkedin.com/" },
+      { label: "Instagram", url: "https://instagram.com/sorenfotos" }
     ],
   },
 };
@@ -213,6 +212,7 @@ function renderGrid() {
       return `
         <article class="card card-${p.category}" data-id="${p.id}" style="--i:${i}" tabindex="0" role="button" aria-label="${escapeHtml(p.title || p.category)}">
           <div class="card-media" style="${bg}"></div>
+          ${p.category === "video" ? `<span class="play-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><polygon points="8,5 20,12 8,19"></polygon></svg></span>` : ""}
           <div class="overlay">
             ${p.title ? `<h3>${escapeHtml(p.title)}</h3>` : ""}
             <p class="sub">${p.category}${p.title && p.client ? " · " + escapeHtml(p.client) : ""}</p>
