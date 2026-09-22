@@ -1,1 +1,222 @@
-[]
+[
+  {
+    "id": "proj-1790021872360",
+    "title": "Pizza Commercial",
+    "category": "video",
+    "year": "2026",
+    "client": "Sams Pizza",
+    "description": "",
+    "videoUrl": "https://youtu.be/OmQ-1oOcdMw",
+    "thumbnail": "assets/1790021868577-samscommercial-thumbnail.jpg",
+    "coverColor": "#222222"
+  },
+  {
+    "id": "proj-1790020620079-z1oj8",
+    "title": "",
+    "category": "foto",
+    "year": "",
+    "client": "",
+    "description": "",
+    "videoUrl": "",
+    "thumbnail": "assets/1790020619003-photo_13_2026-09-21_21-51-54.jpg",
+    "coverColor": "#222222"
+  },
+  {
+    "id": "proj-1790020619003-tpdpg",
+    "title": "",
+    "category": "foto",
+    "year": "",
+    "client": "",
+    "description": "",
+    "videoUrl": "",
+    "thumbnail": "assets/1790020617745-photo_12_2026-09-21_21-51-54.jpg",
+    "coverColor": "#222222"
+  },
+  {
+    "id": "proj-1790020617745-l71yh",
+    "title": "",
+    "category": "foto",
+    "year": "",
+    "client": "",
+    "description": "",
+    "videoUrl": "",
+    "thumbnail": "assets/1790020616347-photo_11_2026-09-21_21-51-54.jpg",
+    "coverColor": "#222222"
+  },
+  {
+    "id": "proj-1790020616347-ejaz1",
+    "title": "",
+    "category": "foto",
+    "year": "",
+    "client": "",
+    "description": "",
+    "videoUrl": "",
+    "thumbnail": "assets/1790020615042-photo_14_2026-09-21_21-51-54.jpg",
+    "coverColor": "#222222"
+  },
+  {
+    "id": "proj-1790020615042-hej2s",
+    "title": "",
+    "category": "foto",
+    "year": "",
+    "client": "",
+    "description": "",
+    "videoUrl": "",
+    "thumbnail": "assets/1790020613950-photo_16_2026-09-21_21-51-54.jpg",
+    "coverColor": "#222222"
+  },
+  {
+    "id": "proj-1790020613950-aqoet",
+    "title": "",
+    "category": "foto",
+    "year": "",
+    "client": "",
+    "description": "",
+    "videoUrl": "",
+    "thumbnail": "assets/1790020612915-photo_15_2026-09-21_21-51-54.jpg",
+    "coverColor": "#222222"
+  },
+  {
+    "id": "proj-1790020612915-teqa2",
+    "title": "",
+    "category": "foto",
+    "year": "",
+    "client": "",
+    "description": "",
+    "videoUrl": "",
+    "thumbnail": "assets/1790020611497-photo_19_2026-09-21_21-51-54.jpg",
+    "coverColor": "#222222"
+  },
+  {
+    "id": "proj-1790020611497-d9q50",
+    "title": "",
+    "category": "foto",
+    "year": "",
+    "client": "",
+    "description": "",
+    "videoUrl": "",
+    "thumbnail": "assets/1790020610436-photo_18_2026-09-21_21-51-54.jpg",
+    "coverColor": "#222222"
+  },
+  {
+    "id": "proj-1790020610435-kl0ym",
+    "title": "",
+    "category": "foto",
+    "year": "",
+    "client": "",
+    "description": "",
+    "videoUrl": "",
+    "thumbnail": "assets/1790020609076-photo_17_2026-09-21_21-51-54.jpg",
+    "coverColor": "#222222"
+  },
+  {
+    "id": "proj-1790020609076-c952b",
+    "title": "",
+    "category": "foto",
+    "year": "",
+    "client": "",
+    "description": "",
+    "videoUrl": "",
+    "thumbnail": "assets/1790020607680-photo_20_2026-09-21_21-51-54.jpg",
+    "coverColor": "#222222"
+  },
+  {
+    "id": "proj-1790020607680-qnbb0",
+    "title": "",
+    "category": "foto",
+    "year": "",
+    "client": "",
+    "description": "",
+    "videoUrl": "",
+    "thumbnail": "assets/1790020605827-photo_21_2026-09-21_21-51-54.jpg",
+    "coverColor": "#222222"
+  },
+  {
+    "id": "proj-1790020605827-qu37e",
+    "title": "",
+    "category": "foto",
+    "year": "",
+    "client": "",
+    "description": "",
+    "videoUrl": "",
+    "thumbnail": "assets/1790020604415-photo_23_2026-09-21_21-51-54.jpg",
+    "coverColor": "#222222"
+  },
+  {
+    "id": "proj-1790020604414-k5mr7",
+    "title": "",
+    "category": "foto",
+    "year": "",
+    "client": "",
+    "description": "",
+    "videoUrl": "",
+    "thumbnail": "assets/1790020602793-photo_22_2026-09-21_21-51-54.jpg",
+    "coverColor": "#222222"
+  },
+  {
+    "id": "proj-1790020602793-vx8tu",
+    "title": "",
+    "category": "foto",
+    "year": "",
+    "client": "",
+    "description": "",
+    "videoUrl": "",
+    "thumbnail": "assets/1790020600712-photo_24_2026-09-21_21-51-54.jpg",
+    "coverColor": "#222222"
+  },
+  {
+    "id": "proj-1790020600712-mi9q4",
+    "title": "",
+    "category": "foto",
+    "year": "",
+    "client": "",
+    "description": "",
+    "videoUrl": "",
+    "thumbnail": "assets/1790020599386-photo_29_2026-09-21_21-51-54.jpg",
+    "coverColor": "#222222"
+  },
+  {
+    "id": "proj-1790020599386-rujl9",
+    "title": "",
+    "category": "foto",
+    "year": "",
+    "client": "",
+    "description": "",
+    "videoUrl": "",
+    "thumbnail": "assets/1790020597534-photo_28_2026-09-21_21-51-54.jpg",
+    "coverColor": "#222222"
+  },
+  {
+    "id": "proj-1790020597534-qwzcn",
+    "title": "",
+    "category": "foto",
+    "year": "",
+    "client": "",
+    "description": "",
+    "videoUrl": "",
+    "thumbnail": "assets/1790020596249-photo_26_2026-09-21_21-51-54.jpg",
+    "coverColor": "#222222"
+  },
+  {
+    "id": "proj-1790020596249-ss410",
+    "title": "",
+    "category": "foto",
+    "year": "",
+    "client": "",
+    "description": "",
+    "videoUrl": "",
+    "thumbnail": "assets/1790020594606-photo_25_2026-09-21_21-51-54.jpg",
+    "coverColor": "#222222"
+  },
+  {
+    "id": "proj-1790020594606-lj739",
+    "title": "",
+    "category": "foto",
+    "year": "",
+    "client": "",
+    "description": "",
+    "videoUrl": "",
+    "thumbnail": "assets/1790020592170-photo_27_2026-09-21_21-51-54.jpg",
+    "coverColor": "#222222"
+  }
+]

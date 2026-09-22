@@ -708,7 +708,7 @@ async function fetchAssetLibrary(force) {
 
   assetLibraryCache = data
     .filter((item) => item.type === "file" && /\.(png|jpe?g|gif|webp|avif|svg)$/i.test(item.name))
-    .map((item) => ({ name: item.name, path: item.path, url: item.download_url }));
+    .map((item) => ({ name: item.name, path: item.path, url: item.download_url, sha: item.sha }));
 
   return assetLibraryCache;
 }
@@ -756,14 +756,17 @@ function renderAssetPickerGrid(images) {
   gridEl.innerHTML = filtered
     .map(
       (img) => `
-    <button type="button" class="asset-picker-item" data-path="${img.path}" title="${escapeHtml(img.name)}">
-      <img src="${img.url}" alt="${escapeHtml(img.name)}" loading="lazy">
-      <span>${escapeHtml(img.name)}</span>
-    </button>`
+    <div class="asset-picker-item">
+      <button type="button" class="asset-picker-delete" data-path="${img.path}" data-sha="${img.sha}" data-name="${escapeHtml(img.name)}" title="Slet billede">&times;</button>
+      <button type="button" class="asset-picker-select" data-path="${img.path}" title="${escapeHtml(img.name)}">
+        <img src="${img.url}" alt="${escapeHtml(img.name)}" loading="lazy">
+        <span>${escapeHtml(img.name)}</span>
+      </button>
+    </div>`
     )
     .join("");
 
-  gridEl.querySelectorAll(".asset-picker-item").forEach((btn) => {
+  gridEl.querySelectorAll(".asset-picker-select").forEach((btn) => {
     btn.addEventListener("click", () => {
       document.getElementById("f-thumbnail").value = btn.dataset.path;
       const statusEl = document.getElementById("f-thumbnail-status");
@@ -772,6 +775,53 @@ function renderAssetPickerGrid(images) {
       closeAssetPicker();
     });
   });
+
+  gridEl.querySelectorAll(".asset-picker-delete").forEach((btn) => {
+    btn.addEventListener("click", () => handleDeleteAsset(btn.dataset.path, btn.dataset.sha, btn.dataset.name));
+  });
+}
+
+async function handleDeleteAsset(path, sha, name) {
+  const confirmed = confirm(`Slet "${name}" permanent fra assets/? Dette kan ikke fortrydes.`);
+  if (!confirmed) return;
+
+  const statusEl = document.getElementById("asset-picker-status");
+  statusEl.textContent = `Sletter ${name}…`;
+  statusEl.className = "admin-field-status";
+
+  try {
+    const cfg = {
+      owner: valueOrPlaceholder("admin-owner"),
+      repo: valueOrPlaceholder("admin-repo"),
+      branch: valueOrPlaceholder("admin-branch"),
+      token: document.getElementById("admin-token").value.trim(),
+    };
+    if (!cfg.token) throw new Error("Udfyld personligt adgangstoken ovenfor først.");
+
+    const apiBase = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`;
+    const res = await fetch(apiBase, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${cfg.token}`, Accept: "application/vnd.github+json" },
+      body: JSON.stringify({
+        message: `Slet billede ${name} via admin panel`,
+        sha,
+        branch: cfg.branch,
+      }),
+    });
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      throw new Error(errBody.message || `Sletning fejlede (${res.status})`);
+    }
+
+    assetLibraryCache = (assetLibraryCache || []).filter((img) => img.path !== path);
+    renderAssetPickerGrid(assetLibraryCache);
+    statusEl.textContent = `"${name}" er slettet.`;
+    statusEl.className = "admin-field-status ok";
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = "Fejl: " + err.message;
+    statusEl.className = "admin-field-status err";
+  }
 }
 
 function ensureAssetPickerOverlay() {
