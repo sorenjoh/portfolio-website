@@ -194,11 +194,11 @@ function renderGrid() {
         ? `background-image:url('${p.thumbnail}')`
         : `background:linear-gradient(135deg, ${p.coverColor || "#222"}, #0a0a0a)`;
       return `
-        <article class="card" data-id="${p.id}" style="--i:${i}" tabindex="0" role="button" aria-label="${escapeHtml(p.title)}">
+        <article class="card" data-id="${p.id}" style="--i:${i}" tabindex="0" role="button" aria-label="${escapeHtml(p.title || p.category)}">
           <div class="card-media" style="${bg}"></div>
           <div class="overlay">
-            <h3>${escapeHtml(p.title)}</h3>
-            <p class="sub">${p.category}${p.client ? " · " + escapeHtml(p.client) : ""}</p>
+            ${p.title ? `<h3>${escapeHtml(p.title)}</h3>` : ""}
+            <p class="sub">${p.category}${p.title && p.client ? " · " + escapeHtml(p.client) : ""}</p>
           </div>
         </article>`;
     })
@@ -223,12 +223,12 @@ function openLightbox(id) {
   if (p.category === "video" && p.videoUrl) {
     mediaEl.innerHTML = `<iframe src="${toEmbedUrl(p.videoUrl)}" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
   } else if (p.thumbnail) {
-    mediaEl.innerHTML = `<img src="${p.thumbnail}" alt="${escapeHtml(p.title)}">`;
+    mediaEl.innerHTML = `<img src="${p.thumbnail}" alt="${escapeHtml(p.title || "Uden titel")}">`;
   } else {
     mediaEl.innerHTML = `<div style="width:100%;height:100%;background:linear-gradient(135deg, ${p.coverColor || "#222"}, #0a0a0a)"></div>`;
   }
 
-  document.getElementById("lightbox-title").textContent = p.title;
+  document.getElementById("lightbox-title").textContent = p.title || "Uden titel";
   document.getElementById("lightbox-desc").textContent = p.description || "";
   document.getElementById("lightbox").classList.add("open");
 }
@@ -382,8 +382,23 @@ function ensureAdminOverlay() {
       </fieldset>
 
       <fieldset>
+        <legend>Batch-upload billeder</legend>
+        <p class="admin-sub" style="margin-bottom:10px;">
+          Upload flere billeder på én gang uden at udfylde noget om dem. Hvert
+          billede bliver tilføjet som et projekt uden titel nederst på listen
+          — rediger dem enkeltvis senere for at tilføje titel, kategori,
+          beskrivelse osv.
+        </p>
+        <div class="admin-upload-row">
+          <label class="admin-upload-btn" for="admin-batch-upload">Vælg billeder</label>
+          <input type="file" id="admin-batch-upload" accept="image/*" multiple>
+        </div>
+        <p class="admin-field-status" id="admin-batch-status"></p>
+      </fieldset>
+
+      <fieldset>
         <legend id="admin-form-legend">Nyt projekt</legend>
-        <label>Titel</label>
+        <label>Titel <span style="color:var(--text-muted); font-weight:400;">(valgfri)</span></label>
         <input id="f-title">
         <div class="admin-row">
           <div>
@@ -413,6 +428,7 @@ function ensureAdminOverlay() {
             <div class="admin-upload-row">
               <label class="admin-upload-btn" for="f-thumbnail-upload">Upload billede</label>
               <input type="file" id="f-thumbnail-upload" accept="image/*">
+              <button type="button" class="admin-upload-btn" id="f-thumbnail-browse">Vælg fra bibliotek</button>
             </div>
             <p class="admin-field-status" id="f-thumbnail-status"></p>
           </div>
@@ -442,6 +458,14 @@ function ensureAdminOverlay() {
   document.getElementById("admin-save-item").addEventListener("click", saveAdminItem);
   document.getElementById("admin-save-changes").addEventListener("click", saveChangesToGitHub);
   document.getElementById("f-thumbnail-upload").addEventListener("change", handleThumbnailUpload);
+  document.getElementById("f-thumbnail-browse").addEventListener("click", openAssetPicker);
+  document.getElementById("admin-batch-upload").addEventListener("change", handleBatchUpload);
+}
+
+function fileNameFromPath(path) {
+  if (!path) return "";
+  const parts = path.split("/");
+  return parts[parts.length - 1];
 }
 
 function renderAdminList() {
@@ -451,25 +475,38 @@ function renderAdminList() {
     return;
   }
   list.innerHTML = adminDraft
-    .map(
-      (p) => `
+    .map((p, idx) => {
+      const displayTitle = p.title || fileNameFromPath(p.thumbnail) || "Unavngivet projekt";
+      const untitledTag = p.title ? "" : ' <span style="color:var(--text-muted);">(uden titel)</span>';
+      return `
     <div class="admin-list-item">
       <div>
-        <div class="l-title">${escapeHtml(p.title)}</div>
+        <div class="l-title">${escapeHtml(displayTitle)}${untitledTag}</div>
         <div class="l-meta">${p.category} · ${escapeHtml(p.client || "")} ${p.year || ""}</div>
       </div>
       <div class="l-actions">
+        <button onclick="moveAdminItem('${p.id}', -1)" title="Flyt op"${idx === 0 ? " disabled" : ""}>↑</button>
+        <button onclick="moveAdminItem('${p.id}', 1)" title="Flyt ned"${idx === adminDraft.length - 1 ? " disabled" : ""}>↓</button>
         <button onclick="editAdminItem('${p.id}')">Edit</button>
         <button onclick="deleteAdminItem('${p.id}')">Delete</button>
       </div>
-    </div>`
-    )
+    </div>`;
+    })
     .join("");
+}
+
+function moveAdminItem(id, direction) {
+  const idx = adminDraft.findIndex((p) => p.id === id);
+  if (idx === -1) return;
+  const newIdx = idx + direction;
+  if (newIdx < 0 || newIdx >= adminDraft.length) return;
+  const [item] = adminDraft.splice(idx, 1);
+  adminDraft.splice(newIdx, 0, item);
+  renderAdminList();
 }
 
 function saveAdminItem() {
   const title = document.getElementById("f-title").value.trim();
-  if (!title) { alert("Titel er påkrævet."); return; }
 
   const data = {
     id: adminEditingId || "proj-" + Date.now(),
@@ -605,6 +642,169 @@ async function handleThumbnailUpload(e) {
   }
 }
 
+async function handleBatchUpload(e) {
+  const files = Array.from(e.target.files || []);
+  if (files.length === 0) return;
+
+  const statusEl = document.getElementById("admin-batch-status");
+  let uploaded = 0;
+
+  for (const file of files) {
+    statusEl.textContent = `Uploader ${uploaded + 1} af ${files.length} (${file.name})…`;
+    statusEl.className = "admin-field-status";
+    try {
+      const path = await uploadImageToGitHub(file);
+      adminDraft.unshift({
+        id: "proj-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+        title: "",
+        category: "foto",
+        year: "",
+        client: "",
+        description: "",
+        videoUrl: "",
+        thumbnail: path,
+        coverColor: "#222222",
+      });
+      uploaded++;
+      renderAdminList();
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent = `Fejl ved upload af ${file.name}: ${err.message} — fortsætter med resten.`;
+      statusEl.className = "admin-field-status err";
+    }
+  }
+
+  statusEl.textContent =
+    `${uploaded} af ${files.length} billede(r) uploadet og tilføjet til listen herunder uden titel. ` +
+    `Klik "Edit" på hvert for at tilføje titel, kategori m.m., og husk "Gem ændringer" for at gøre det permanent.`;
+  statusEl.className = uploaded === files.length ? "admin-field-status ok" : "admin-field-status err";
+  e.target.value = "";
+}
+
+// ---------- Asset library picker (browse existing images in assets/) ----------
+
+let assetLibraryCache = null; // cached list so reopening doesn't refetch every time
+
+async function fetchAssetLibrary(force) {
+  if (assetLibraryCache && !force) return assetLibraryCache;
+
+  const cfg = {
+    owner: valueOrPlaceholder("admin-owner"),
+    repo: valueOrPlaceholder("admin-repo"),
+    branch: valueOrPlaceholder("admin-branch"),
+    token: document.getElementById("admin-token").value.trim(),
+  };
+  if (!cfg.owner || !cfg.repo) {
+    throw new Error("Udfyld GitHub-forbindelsen ovenfor først.");
+  }
+
+  const headers = { Accept: "application/vnd.github+json" };
+  if (cfg.token) headers.Authorization = `Bearer ${cfg.token}`;
+
+  const apiBase = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/assets?ref=${cfg.branch}`;
+  const res = await fetch(apiBase, { headers });
+  if (!res.ok) throw new Error(`Kunne ikke hente billeder (${res.status})`);
+  const data = await res.json();
+
+  assetLibraryCache = data
+    .filter((item) => item.type === "file" && /\.(png|jpe?g|gif|webp|avif|svg)$/i.test(item.name))
+    .map((item) => ({ name: item.name, path: item.path, url: item.download_url }));
+
+  return assetLibraryCache;
+}
+
+async function openAssetPicker() {
+  ensureAssetPickerOverlay();
+  document.getElementById("asset-picker-overlay").classList.add("open");
+  document.getElementById("asset-picker-search").value = "";
+  await loadAssetPickerGrid(false);
+}
+
+function closeAssetPicker() {
+  const el = document.getElementById("asset-picker-overlay");
+  if (el) el.classList.remove("open");
+}
+
+async function loadAssetPickerGrid(force) {
+  const statusEl = document.getElementById("asset-picker-status");
+  const gridEl = document.getElementById("asset-picker-grid");
+  statusEl.textContent = "Henter billeder…";
+  statusEl.className = "admin-field-status";
+  gridEl.innerHTML = "";
+  try {
+    const images = await fetchAssetLibrary(force);
+    renderAssetPickerGrid(images);
+    statusEl.textContent = `${images.length} billede(r) i assets/.`;
+    statusEl.className = "admin-field-status";
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = "Fejl: " + err.message;
+    statusEl.className = "admin-field-status err";
+  }
+}
+
+function renderAssetPickerGrid(images) {
+  const gridEl = document.getElementById("asset-picker-grid");
+  const query = document.getElementById("asset-picker-search").value.trim().toLowerCase();
+  const filtered = query ? images.filter((img) => img.name.toLowerCase().includes(query)) : images;
+
+  if (filtered.length === 0) {
+    gridEl.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">Ingen billeder matcher.</p>`;
+    return;
+  }
+
+  gridEl.innerHTML = filtered
+    .map(
+      (img) => `
+    <button type="button" class="asset-picker-item" data-path="${img.path}" title="${escapeHtml(img.name)}">
+      <img src="${img.url}" alt="${escapeHtml(img.name)}" loading="lazy">
+      <span>${escapeHtml(img.name)}</span>
+    </button>`
+    )
+    .join("");
+
+  gridEl.querySelectorAll(".asset-picker-item").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.getElementById("f-thumbnail").value = btn.dataset.path;
+      const statusEl = document.getElementById("f-thumbnail-status");
+      statusEl.textContent = "Valgt: " + btn.dataset.path;
+      statusEl.className = "admin-field-status ok";
+      closeAssetPicker();
+    });
+  });
+}
+
+function ensureAssetPickerOverlay() {
+  if (document.getElementById("asset-picker-overlay")) return;
+
+  const overlay = document.createElement("div");
+  overlay.id = "asset-picker-overlay";
+  overlay.className = "admin-overlay asset-picker-overlay";
+  overlay.innerHTML = `
+    <div class="admin-panel asset-picker-panel">
+      <button class="admin-close-x" id="asset-picker-close">&times;</button>
+      <h2>Vælg billede</h2>
+      <p class="admin-sub">Vælg et billede der allerede er uploadet til assets-mappen. Skriv i søgefeltet for at filtrere, hvis der er mange.</p>
+      <div class="asset-picker-controls">
+        <div>
+          <label>Søg efter filnavn</label>
+          <input id="asset-picker-search" placeholder="f.eks. pizza">
+        </div>
+        <button class="admin-btn ghost" id="asset-picker-refresh">Opdatér</button>
+      </div>
+      <p class="admin-field-status" id="asset-picker-status"></p>
+      <div class="asset-picker-grid" id="asset-picker-grid"></div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  document.getElementById("asset-picker-close").addEventListener("click", closeAssetPicker);
+  document.getElementById("asset-picker-refresh").addEventListener("click", () => loadAssetPickerGrid(true));
+  document.getElementById("asset-picker-search").addEventListener("input", () => {
+    if (assetLibraryCache) renderAssetPickerGrid(assetLibraryCache);
+  });
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) closeAssetPicker(); });
+}
+
 async function saveChangesToGitHub() {
   const status = document.getElementById("admin-status");
   const cfg = {
@@ -668,3 +868,4 @@ async function saveChangesToGitHub() {
 
 window.editAdminItem = editAdminItem;
 window.deleteAdminItem = deleteAdminItem;
+window.moveAdminItem = moveAdminItem;
