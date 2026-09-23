@@ -20,8 +20,8 @@ const SITE = {
   // Nøglen matcher data-page på <body> på hver side.
   nav: [
     { page: "work",    label: "Arbejde", href: "./" },
-    { page: "bio",     label: "Bio",     href: "bio.html" },
-    { page: "contact", label: "Kontakt", href: "contact.html" },
+    { page: "bio",     label: "Bio",     href: "bio" },
+    { page: "contact", label: "Kontakt", href: "contact" },
   ],
 
   // Filtre på forsiden. "value" skal matche category i projects.json.
