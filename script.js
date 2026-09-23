@@ -37,14 +37,13 @@ const SITE = {
   },
 
   // Standard-lydstyrke for YouTube-videoer i lightboxen (0-100).
-  defaultVolume: 30,
+  defaultVolume: 15,
 
   // Bruges på kontaktsiden.
   contact: {
-    email: "din@email.dk",
+    email: "soren@sorenfoto.com",
     links: [
-      { label: "Instagram", url: "https://instagram.com/" },
-      { label: "LinkedIn",  url: "https://linkedin.com/" },
+      { label: "Instagram", url: "https://instagram.com/sorenfotos" }
     ],
   },
 };
