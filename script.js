@@ -37,13 +37,14 @@ const SITE = {
   },
 
   // Standard-lydstyrke for YouTube-videoer i lightboxen (0-100).
-  defaultVolume: 15,
+  defaultVolume: 30,
 
   // Bruges på kontaktsiden.
   contact: {
-    email: "soren@sorenfoto.com",
+    email: "din@email.dk",
     links: [
-      { label: "Instagram", url: "https://instagram.com/sorenfotos" }
+      { label: "Instagram", url: "https://instagram.com/" },
+      { label: "LinkedIn",  url: "https://linkedin.com/" },
     ],
   },
 };
@@ -833,17 +834,21 @@ function renderAssetPickerGrid(images) {
     return;
   }
 
+  const usedPaths = new Set(adminDraft.map((p) => p.thumbnail).filter(Boolean));
+
   gridEl.innerHTML = filtered
-    .map(
-      (img) => `
+    .map((img) => {
+      const isUnused = !usedPaths.has(img.path);
+      return `
     <div class="asset-picker-item">
       <button type="button" class="asset-picker-delete" data-path="${img.path}" data-sha="${img.sha}" data-name="${escapeHtml(img.name)}" title="Slet billede">&times;</button>
+      ${isUnused ? '<span class="asset-picker-unused">Ubrugt</span>' : ""}
       <button type="button" class="asset-picker-select" data-path="${img.path}" title="${escapeHtml(img.name)}">
         <img src="${img.url}" alt="${escapeHtml(img.name)}" loading="lazy">
         <span>${escapeHtml(img.name)}</span>
       </button>
-    </div>`
-    )
+    </div>`;
+    })
     .join("");
 
   gridEl.querySelectorAll(".asset-picker-select").forEach((btn) => {
