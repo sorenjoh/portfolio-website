@@ -24,13 +24,6 @@ const SITE = {
     { page: "contact", label: "Kontakt", href: "contact" },
   ],
 
-  // Filtre på forsiden. "value" skal matche category i projects.json.
-  categories: [
-    { value: "alle",  label: "Alle" },
-    { value: "video", label: "Video" },
-    { value: "foto",  label: "Foto" },
-  ],
-
   footer: {
     owner: "Søren Johansen",
     location: "Baseret i — København, Danmark",
@@ -49,6 +42,7 @@ const SITE = {
 };
 
 let allProjects = [];
+let categoryOrder = []; // rækkefølgen af kategori-filtre, gemt i projects.json
 let activeCategory = "alle";
 let currentVolume = SITE.defaultVolume;
 let ytPlayer = null;
@@ -92,15 +86,39 @@ function buildHeader() {
     </div>`;
 }
 
-function buildFilterBar() {
+// Kategorier findes ikke som en fast liste — de er de forskellige
+// "category"-værdier, der er i brug blandt projekterne. Rækkefølgen
+// styres af categoryOrder (redigérbar i admin-panelet, gemt i
+// projects.json); en kategori der bruges, men endnu ikke er placeret
+// i rækkefølgen, havner alfabetisk til sidst, indtil den bliver sorteret.
+function deriveDefaultCategoryOrder(projects) {
+  const set = new Set();
+  projects.forEach((p) => { if (p.category) set.add(p.category); });
+  return Array.from(set).sort((a, b) => a.localeCompare(b, "da"));
+}
+
+function getCategoryList() {
+  const used = new Set();
+  allProjects.forEach((p) => { if (p.category) used.add(p.category); });
+  const ordered = categoryOrder.filter((c) => used.has(c));
+  const extra = Array.from(used)
+    .filter((c) => !categoryOrder.includes(c))
+    .sort((a, b) => a.localeCompare(b, "da"));
+  return ["alle", ...ordered, ...extra];
+}
+
+function renderFilterBar() {
   const host = document.getElementById("filter-bar");
   if (!host) return;
 
-  host.innerHTML = SITE.categories
-    .map(
-      (c) =>
-        `<button${c.value === activeCategory ? ' class="active"' : ""} data-category="${c.value}">${escapeHtml(c.label)}</button>`
-    )
+  const categories = getCategoryList();
+  if (!categories.includes(activeCategory)) activeCategory = "alle";
+
+  host.innerHTML = categories
+    .map((value) => {
+      const label = value === "alle" ? "Alle" : value;
+      return `<button${value === activeCategory ? ' class="active"' : ""} data-category="${escapeHtml(value)}">${escapeHtml(label)}</button>`;
+    })
     .join("");
 }
 
@@ -167,7 +185,6 @@ function buildChrome() {
   if (currentPage() !== "work") document.body.classList.add("subpage");
   buildFavicon();
   buildHeader();
-  buildFilterBar();
   buildContactLinks();
   buildFooter();
   buildLightbox();
@@ -183,11 +200,21 @@ buildChrome();
 async function loadProjects() {
   try {
     const res = await fetch("projects.json", { cache: "no-store" });
-    allProjects = await res.json();
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      // Gammelt format (fra før kategori-rækkefølge fandtes) — læses stadig fint.
+      allProjects = data;
+      categoryOrder = deriveDefaultCategoryOrder(allProjects);
+    } else {
+      allProjects = data.projects || [];
+      categoryOrder = data.categoryOrder || deriveDefaultCategoryOrder(allProjects);
+    }
   } catch (err) {
     console.error("Could not load projects.json", err);
     allProjects = [];
+    categoryOrder = [];
   }
+  renderFilterBar();
   renderGrid();
 }
 
@@ -206,16 +233,17 @@ function renderGrid() {
 
   grid.innerHTML = filtered
     .map((p, i) => {
+      const isVideo = Boolean(p.videoUrl);
       const bg = p.thumbnail
         ? `background-image:url('${p.thumbnail}')`
         : `background:linear-gradient(135deg, ${p.coverColor || "#222"}, #0a0a0a)`;
       return `
-        <article class="card card-${p.category}" data-id="${p.id}" style="--i:${i}" tabindex="0" role="button" aria-label="${escapeHtml(p.title || p.category)}">
+        <article class="card ${isVideo ? "card-video" : "card-foto"}" data-id="${p.id}" style="--i:${i}" tabindex="0" role="button" aria-label="${escapeHtml(p.title || p.category)}">
           <div class="card-media" style="${bg}"></div>
-          ${p.category === "video" ? `<span class="play-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><polygon points="8,5 20,12 8,19"></polygon></svg></span>` : ""}
+          ${isVideo ? `<span class="play-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><polygon points="8,5 20,12 8,19"></polygon></svg></span>` : ""}
           <div class="overlay">
             ${p.title ? `<h3>${escapeHtml(p.title)}</h3>` : ""}
-            <p class="sub">${p.category}${p.title && p.client ? " · " + escapeHtml(p.client) : ""}</p>
+            <p class="sub">${escapeHtml(p.category || "")}${p.title && p.client ? " · " + escapeHtml(p.client) : ""}</p>
           </div>
         </article>`;
     })
@@ -238,7 +266,7 @@ function openLightbox(id) {
 
   const mediaEl = document.getElementById("lightbox-media");
   const volumeEl = document.getElementById("lightbox-volume");
-  const youTubeId = p.category === "video" && p.videoUrl ? extractYouTubeId(p.videoUrl) : null;
+  const youTubeId = p.videoUrl ? extractYouTubeId(p.videoUrl) : null;
 
   if (youTubeId) {
     mediaEl.innerHTML = `<div id="yt-player"></div>`;
@@ -248,7 +276,7 @@ function openLightbox(id) {
     loadYouTubePlayer(youTubeId);
   } else {
     volumeEl.style.display = "none";
-    if (p.category === "video" && p.videoUrl) {
+    if (p.videoUrl) {
       // Non-YouTube video link (e.g. Vimeo) — plain embed, no volume control available.
       mediaEl.innerHTML = `<iframe src="${toEmbedUrl(p.videoUrl)}" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
     } else if (p.thumbnail) {
@@ -347,14 +375,16 @@ function escapeHtml(str) {
 document.addEventListener("DOMContentLoaded", () => {
   loadProjects();
 
-  document.querySelectorAll(".filter-bar button").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".filter-bar button").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
+  const filterBar = document.getElementById("filter-bar");
+  if (filterBar) {
+    filterBar.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-category]");
+      if (!btn) return;
       activeCategory = btn.dataset.category;
+      filterBar.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b === btn));
       renderGrid();
     });
-  });
+  }
 
   const lbClose = document.getElementById("lightbox-close");
   if (lbClose) lbClose.addEventListener("click", closeLightbox);
@@ -388,6 +418,7 @@ function setAdminConfig(cfg) {
 }
 
 let adminDraft = []; // working copy of projects while the panel is open
+let adminCategoryOrder = []; // working copy of category order while the panel is open
 let adminEditingId = null;
 
 async function admin() {
@@ -408,6 +439,7 @@ window.admin = admin;
 function openAdminPanel() {
   ensureAdminOverlay();
   adminDraft = JSON.parse(JSON.stringify(allProjects)); // copy so cancel = no changes
+  adminCategoryOrder = [...categoryOrder];
   adminEditingId = null;
   renderAdminList();
   resetAdminForm();
@@ -482,11 +514,9 @@ function ensureAdminOverlay() {
         <input id="f-title">
         <div class="admin-row">
           <div>
-            <label>Kategori</label>
-            <select id="f-category">
-              <option value="video">Video</option>
-              <option value="foto">Foto</option>
-            </select>
+            <label>Kategori <span style="color:var(--text-muted); font-weight:400;">(skriv en ny for at oprette den)</span></label>
+            <input id="f-category" list="f-category-options" placeholder="f.eks. bryllup">
+            <datalist id="f-category-options"></datalist>
           </div>
           <div>
             <label>År</label>
@@ -521,6 +551,16 @@ function ensureAdminOverlay() {
         </div>
       </fieldset>
 
+      <fieldset>
+        <legend>Kategorirækkefølge</legend>
+        <p class="admin-sub" style="margin-bottom:10px;">
+          Bestemmer rækkefølgen af filterknapperne på forsiden (ud over
+          "Alle", som altid står først). Kun kategorier der er i brug lige
+          nu, vises her.
+        </p>
+        <div id="admin-category-list"></div>
+      </fieldset>
+
       <div id="admin-list"></div>
 
       <div class="admin-actions">
@@ -548,7 +588,67 @@ function fileNameFromPath(path) {
   return parts[parts.length - 1];
 }
 
+function populateCategoryDatalist() {
+  const host = document.getElementById("f-category-options");
+  if (!host) return;
+  const set = new Set();
+  adminDraft.forEach((p) => { if (p.category) set.add(p.category); });
+  const sorted = Array.from(set).sort((a, b) => a.localeCompare(b, "da"));
+  host.innerHTML = sorted.map((c) => `<option value="${escapeHtml(c)}"></option>`).join("");
+}
+
+// Holder adminCategoryOrder i sync med de kategorier, der rent faktisk er
+// i brug i adminDraft lige nu: fjerner dem der ikke bruges mere, og
+// tilføjer nye (alfabetisk) i bunden af rækkefølgen.
+function reconcileCategoryOrder() {
+  const used = new Set();
+  adminDraft.forEach((p) => { if (p.category) used.add(p.category); });
+  const kept = adminCategoryOrder.filter((c) => used.has(c));
+  const missing = Array.from(used)
+    .filter((c) => !adminCategoryOrder.includes(c))
+    .sort((a, b) => a.localeCompare(b, "da"));
+  adminCategoryOrder = [...kept, ...missing];
+}
+
+function renderAdminCategoryList() {
+  const host = document.getElementById("admin-category-list");
+  if (!host) return;
+
+  reconcileCategoryOrder();
+
+  if (adminCategoryOrder.length === 0) {
+    host.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">Ingen kategorier endnu.</p>`;
+    return;
+  }
+
+  host.innerHTML = adminCategoryOrder
+    .map(
+      (cat, idx) => `
+    <div class="admin-list-item">
+      <div class="l-title">${escapeHtml(cat)}</div>
+      <div class="l-actions">
+        <button onclick="moveAdminCategory('${escapeHtml(cat)}', -1)" title="Flyt op"${idx === 0 ? " disabled" : ""}>↑</button>
+        <button onclick="moveAdminCategory('${escapeHtml(cat)}', 1)" title="Flyt ned"${idx === adminCategoryOrder.length - 1 ? " disabled" : ""}>↓</button>
+      </div>
+    </div>`
+    )
+    .join("");
+}
+
+function moveAdminCategory(cat, direction) {
+  const idx = adminCategoryOrder.indexOf(cat);
+  if (idx === -1) return;
+  const newIdx = idx + direction;
+  if (newIdx < 0 || newIdx >= adminCategoryOrder.length) return;
+  const [item] = adminCategoryOrder.splice(idx, 1);
+  adminCategoryOrder.splice(newIdx, 0, item);
+  renderAdminCategoryList();
+}
+
 function renderAdminList() {
+  populateCategoryDatalist();
+  renderAdminCategoryList();
+
   const list = document.getElementById("admin-list");
   if (adminDraft.length === 0) {
     list.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">Ingen projekter endnu.</p>`;
@@ -562,7 +662,7 @@ function renderAdminList() {
     <div class="admin-list-item">
       <div>
         <div class="l-title">${escapeHtml(displayTitle)}${untitledTag}</div>
-        <div class="l-meta">${p.category} · ${escapeHtml(p.client || "")} ${p.year || ""}</div>
+        <div class="l-meta">${escapeHtml(p.category || "ingen kategori")} · ${escapeHtml(p.client || "")} ${p.year || ""}</div>
       </div>
       <div class="l-actions">
         <button onclick="moveAdminItem('${p.id}', -1)" title="Flyt op"${idx === 0 ? " disabled" : ""}>↑</button>
@@ -591,7 +691,7 @@ function saveAdminItem() {
   const data = {
     id: adminEditingId || "proj-" + Date.now(),
     title,
-    category: document.getElementById("f-category").value,
+    category: document.getElementById("f-category").value.trim().toLowerCase(),
     year: valueOrPlaceholder("f-year"),
     client: document.getElementById("f-client").value.trim(),
     description: document.getElementById("f-description").value.trim(),
@@ -640,7 +740,7 @@ function resetAdminForm() {
   ["f-title", "f-year", "f-client", "f-description", "f-videoUrl", "f-thumbnail"].forEach(
     (id) => (document.getElementById(id).value = "")
   );
-  document.getElementById("f-category").value = "video";
+  document.getElementById("f-category").value = "";
   document.getElementById("f-coverColor").value = "#222222";
   document.getElementById("f-thumbnail-status").textContent = "";
   document.getElementById("admin-cancel-edit").style.display = "none";
@@ -969,7 +1069,9 @@ async function saveChangesToGitHub() {
     const getData = await getRes.json();
 
     // 2. push updated content
-    const jsonString = JSON.stringify(adminDraft, null, 2);
+    reconcileCategoryOrder(); // sørg for at rækkefølgen matcher de aktuelle projekter
+    const payload = { categoryOrder: adminCategoryOrder, projects: adminDraft };
+    const jsonString = JSON.stringify(payload, null, 2);
     const content = btoa(unescape(encodeURIComponent(jsonString)));
 
     const putRes = await fetch(apiBase, {
@@ -989,6 +1091,8 @@ async function saveChangesToGitHub() {
 
     // 3. reflect the change immediately in this tab, no reload needed
     allProjects = adminDraft;
+    categoryOrder = adminCategoryOrder;
+    renderFilterBar();
     renderGrid();
 
     status.textContent = "Gemt. Er live på siden inden for et minuts tid.";
@@ -1003,3 +1107,4 @@ async function saveChangesToGitHub() {
 window.editAdminItem = editAdminItem;
 window.deleteAdminItem = deleteAdminItem;
 window.moveAdminItem = moveAdminItem;
+window.moveAdminCategory = moveAdminCategory;
