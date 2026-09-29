@@ -234,13 +234,14 @@ function renderGrid() {
   grid.innerHTML = filtered
     .map((p, i) => {
       const isVideo = Boolean(p.videoUrl);
+      const ratio = ratioToCss(p.aspectRatio);
       const bg = p.thumbnail
         ? `background-image:url('${p.thumbnail}')`
         : `background:linear-gradient(135deg, ${p.coverColor || "#222"}, #0a0a0a)`;
       return `
-        <article class="card ${isVideo ? "card-video" : "card-foto"}" data-id="${p.id}" style="--i:${i}" tabindex="0" role="button" aria-label="${escapeHtml(p.title || p.category)}">
+        <article class="card ${isVideo ? "card-video" : "card-foto"}${ratio ? " card-custom-ratio" : ""}" data-id="${p.id}" style="--i:${i}${ratio ? ";aspect-ratio:" + ratio : ""}" tabindex="0" role="button" aria-label="${escapeHtml(p.title || p.category)}">
           <div class="card-media" style="${bg}"></div>
-          ${isVideo ? `<span class="play-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><polygon points="8,5 20,12 8,19"></polygon></svg></span>` : ""}
+          ${isVideo ? `<div class="card-video-preview" aria-hidden="true"></div><span class="play-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><polygon points="8,5 20,12 8,19"></polygon></svg></span>` : ""}
           <div class="overlay">
             ${p.title ? `<h3>${escapeHtml(p.title)}</h3>` : ""}
             <p class="sub">${escapeHtml(p.category || "")}${p.title && p.client ? " · " + escapeHtml(p.client) : ""}</p>
@@ -250,6 +251,9 @@ function renderGrid() {
     .join("");
 
   grid.querySelectorAll(".card").forEach((card) => {
+    const project = allProjects.find((p) => p.id === card.dataset.id);
+    if (project?.videoUrl) setupVideoHoverPreview(card, project.videoUrl);
+
     card.addEventListener("click", () => openLightbox(card.dataset.id));
     card.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
@@ -260,11 +264,111 @@ function renderGrid() {
   });
 }
 
+function setupVideoHoverPreview(card, videoUrl) {
+  const host = card.querySelector(".card-video-preview");
+  if (!host || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  let removeTimer = null;
+
+  const start = () => {
+    host.dataset.active = "true";
+    if (removeTimer) {
+      clearTimeout(removeTimer);
+      removeTimer = null;
+    }
+
+    if (host.firstElementChild) {
+      host.classList.add("is-playing");
+      card.classList.add("preview-playing");
+      return;
+    }
+
+    const preview = createVideoPreview(videoUrl);
+    if (!preview) return;
+
+    const reveal = () => {
+      if (host.dataset.active !== "true") return;
+      host.classList.add("is-playing");
+      card.classList.add("preview-playing");
+    };
+
+    preview.addEventListener(preview.tagName === "VIDEO" ? "loadeddata" : "load", reveal, { once: true });
+    host.appendChild(preview);
+  };
+
+  const stop = () => {
+    host.dataset.active = "false";
+    host.classList.remove("is-playing");
+    card.classList.remove("preview-playing");
+    removeTimer = window.setTimeout(() => {
+      if (host.dataset.active === "false") host.replaceChildren();
+    }, 550);
+  };
+
+  if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    card.addEventListener("mouseenter", start);
+    card.addEventListener("mouseleave", stop);
+  }
+  card.addEventListener("focus", start);
+  card.addEventListener("blur", stop);
+}
+
+function createVideoPreview(url) {
+  const youTubeId = extractYouTubeId(url);
+  if (youTubeId) {
+    const iframe = document.createElement("iframe");
+    iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(youTubeId)}?autoplay=1&mute=1&loop=1&playlist=${encodeURIComponent(youTubeId)}&controls=0&rel=0&playsinline=1`;
+    iframe.allow = "autoplay; encrypted-media";
+    iframe.tabIndex = -1;
+    iframe.title = "";
+    return iframe;
+  }
+
+  try {
+    const parsed = new URL(url, window.location.href);
+    if (parsed.hostname.includes("vimeo.com")) {
+      const videoId = parsed.pathname.split("/").filter(Boolean).pop();
+      if (!videoId) return null;
+      const iframe = document.createElement("iframe");
+      iframe.src = `https://player.vimeo.com/video/${encodeURIComponent(videoId)}?autoplay=1&muted=1&loop=1&background=1&autopause=0`;
+      iframe.allow = "autoplay; fullscreen";
+      iframe.tabIndex = -1;
+      iframe.title = "";
+      return iframe;
+    }
+
+    if (/\.(mp4|webm|ogg)(?:$|[?#])/i.test(parsed.href)) {
+      const video = document.createElement("video");
+      video.src = parsed.href;
+      video.muted = true;
+      video.loop = true;
+      video.autoplay = true;
+      video.playsInline = true;
+      video.preload = "metadata";
+      return video;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+// Converts an admin-chosen aspect ratio ("9:16") to a CSS value ("9 / 16").
+// Empty/missing value = automatic, i.e. the ratio the stylesheet already uses.
+function ratioToCss(value) {
+  const raw = (value || "").trim();
+  if (!raw) return "";
+  const m = raw.match(/^(\d+(?:\.\d+)?)\s*[:\/]\s*(\d+(?:\.\d+)?)$/);
+  return m ? `${m[1]} / ${m[2]}` : "";
+}
+
 function openLightbox(id) {
   const p = allProjects.find((proj) => proj.id === id);
   if (!p) return;
 
   const mediaEl = document.getElementById("lightbox-media");
+  mediaEl.style.aspectRatio = ratioToCss(p.aspectRatio) || "";
   const volumeEl = document.getElementById("lightbox-volume");
   const youTubeId = p.videoUrl ? extractYouTubeId(p.videoUrl) : null;
 
@@ -543,8 +647,27 @@ function ensureAdminOverlay() {
             <p class="admin-field-status" id="f-thumbnail-status"></p>
           </div>
         </div>
-        <label>Reservefarve</label>
-        <input id="f-coverColor" type="color" value="#222222">
+        <div class="admin-row">
+          <div>
+            <label>Billedformat</label>
+            <select id="f-aspectRatio">
+              <option value="">Automatisk (standard)</option>
+              <option value="16:9">16:9 (bred)</option>
+              <option value="9:16">9:16 (høj)</option>
+              <option value="4:5">4:5</option>
+              <option value="1:1">1:1 (kvadrat)</option>
+              <option value="4:3">4:3</option>
+              <option value="3:4">3:4</option>
+              <option value="2:3">2:3</option>
+              <option value="3:2">3:2</option>
+              <option value="2.39:1">2.39:1 (cinema)</option>
+            </select>
+          </div>
+          <div>
+            <label>Reservefarve</label>
+            <input id="f-coverColor" type="color" value="#222222">
+          </div>
+        </div>
         <div class="admin-actions">
           <button class="admin-btn primary" id="admin-save-item">Tilføj til liste</button>
           <button class="admin-btn ghost" id="admin-cancel-edit" style="display:none;">Annullér redigering</button>
@@ -698,6 +821,7 @@ function saveAdminItem() {
     videoUrl: document.getElementById("f-videoUrl").value.trim(),
     thumbnail: document.getElementById("f-thumbnail").value.trim(),
     coverColor: document.getElementById("f-coverColor").value,
+    aspectRatio: document.getElementById("f-aspectRatio").value,
   };
 
   if (adminEditingId) {
@@ -724,6 +848,7 @@ function editAdminItem(id) {
   document.getElementById("f-videoUrl").value = p.videoUrl || "";
   document.getElementById("f-thumbnail").value = p.thumbnail || "";
   document.getElementById("f-coverColor").value = p.coverColor || "#222222";
+  document.getElementById("f-aspectRatio").value = p.aspectRatio || "";
   document.getElementById("f-thumbnail-status").textContent = "";
   document.getElementById("admin-cancel-edit").style.display = "inline-block";
 }
@@ -742,6 +867,7 @@ function resetAdminForm() {
   );
   document.getElementById("f-category").value = "";
   document.getElementById("f-coverColor").value = "#222222";
+  document.getElementById("f-aspectRatio").value = "";
   document.getElementById("f-thumbnail-status").textContent = "";
   document.getElementById("admin-cancel-edit").style.display = "none";
 }

@@ -202,6 +202,10 @@ body.subpage .site-title { font-size: clamp(1.7rem, 6vw, 3.6rem); }
 /* video projects read as the reel — full width; photos stay small */
 .grid .card.card-video { grid-column: 1 / -1; }
 
+/* a project with a manually chosen aspect ratio keeps its own shape in one
+   column, so e.g. a 9:16 video doesn't stretch across the whole grid */
+.grid .card.card-video.card-custom-ratio { grid-column: auto; }
+
 .card-media {
   position: absolute;
   inset: 0;
@@ -216,6 +220,28 @@ body.subpage .site-title { font-size: clamp(1.7rem, 6vw, 3.6rem); }
 .card:focus-visible .card-media {
   transform: scale(1.045);
   filter: brightness(0.62);
+}
+
+.card-video-preview {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.55s var(--ease);
+}
+
+.card-video-preview.is-playing { opacity: 1; }
+
+.card-video-preview iframe,
+.card-video-preview video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+  object-fit: cover;
+  pointer-events: none;
 }
 
 .play-icon {
@@ -233,7 +259,8 @@ body.subpage .site-title { font-size: clamp(1.7rem, 6vw, 3.6rem); }
   justify-content: center;
   pointer-events: none;
   backdrop-filter: blur(2px);
-  transition: transform 0.45s var(--ease), background 0.45s var(--ease);
+  transition: transform 0.45s var(--ease), background 0.45s var(--ease), opacity 0.35s var(--ease);
+  z-index: 2;
 }
 
 .play-icon svg {
@@ -249,6 +276,8 @@ body.subpage .site-title { font-size: clamp(1.7rem, 6vw, 3.6rem); }
   background: rgba(10, 10, 10, 0.75);
 }
 
+.card.preview-playing .play-icon { opacity: 0; }
+
 .card .overlay {
   position: absolute;
   inset: 0;
@@ -259,6 +288,7 @@ body.subpage .site-title { font-size: clamp(1.7rem, 6vw, 3.6rem); }
   background: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0) 60%);
   opacity: 0;
   transition: opacity 0.55s var(--ease);
+  z-index: 3;
 }
 
 .card:hover .overlay,
@@ -475,7 +505,7 @@ footer .wrap {
     opacity: 1 !important;
     transform: none !important;
   }
-  .card-media, .card h3, .card .sub, .lightbox-inner { transition: none; transform: none !important; }
+  .card-media, .card-video-preview, .card h3, .card .sub, .lightbox-inner { transition: none; transform: none !important; }
 }
 
 /* ============================================
