@@ -47,7 +47,8 @@
       "description": "",
       "videoUrl": "https://www.youtube.com/watch?v=BAm4HQXh7Wg",
       "thumbnail": "assets/1790713346658-14815c4f-9081-497c-84c9-c5e15014defa.png",
-      "coverColor": "#222222"
+      "coverColor": "#222222",
+      "aspectRatio": "16:9"
     },
     {
       "id": "proj-1790020620079-z1oj8",
