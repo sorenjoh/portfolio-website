@@ -1,21 +1,10 @@
 {
   "categoryOrder": [
     "video",
-    "tiktok/reels",
-    "foto"
+    "foto",
+    "tiktok/reels"
   ],
   "projects": [
-    {
-      "id": "proj-1790711926839",
-      "title": "a",
-      "category": "tiktok/reels",
-      "year": "2026",
-      "client": "",
-      "description": "",
-      "videoUrl": "",
-      "thumbnail": "",
-      "coverColor": "#222222"
-    },
     {
       "id": "proj-1790105093265",
       "title": "Died but came back",
@@ -47,6 +36,17 @@
       "description": "",
       "videoUrl": "https://youtu.be/OmQ-1oOcdMw",
       "thumbnail": "assets/1790021868577-samscommercial-thumbnail.jpg",
+      "coverColor": "#222222"
+    },
+    {
+      "id": "proj-1790711926839",
+      "title": "a",
+      "category": "tiktok/reels",
+      "year": "2026",
+      "client": "",
+      "description": "",
+      "videoUrl": "",
+      "thumbnail": "",
       "coverColor": "#222222"
     },
     {
