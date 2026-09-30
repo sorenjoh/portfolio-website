@@ -184,6 +184,7 @@ body.subpage .site-title { font-size: clamp(1.7rem, 6vw, 3.6rem); }
 .grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
+  grid-auto-flow: row dense;
   gap: 16px;
   padding-bottom: 120px;
 }
@@ -205,6 +206,9 @@ body.subpage .site-title { font-size: clamp(1.7rem, 6vw, 3.6rem); }
 /* a project with a manually chosen aspect ratio keeps its own shape in one
    column, so e.g. a 9:16 video doesn't stretch across the whole grid */
 .grid .card.card-video.card-custom-ratio { grid-column: auto; }
+
+/* portrait/square cards span several photo rows; photos fill in beside them */
+.grid .card.card-tall { grid-row: span var(--rows, 2); aspect-ratio: auto; min-height: 100%; }
 
 .card-media {
   position: absolute;
@@ -790,6 +794,7 @@ footer .wrap {
 @media (max-width: 860px) {
   .grid { grid-template-columns: 1fr; gap: 12px; }
   .grid .card.card-video { grid-column: auto; }
+  .grid .card.card-tall { grid-row: auto; aspect-ratio: var(--ratio); }
 }
 
 @media (max-width: 640px) {

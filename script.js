@@ -41,6 +41,15 @@ const SITE = {
   },
 };
 
+// Datakilde: som standard hentes projects.json og assets fra GitHub-repoet.
+// Køres siden med "python3 serve.py -local", bruges de lokale filer i stedet.
+const REPO_RAW = "https://raw.githubusercontent.com/sorenjoh/portfolio-website/main/";
+const USE_LOCAL = window.SITE_LOCAL === true;
+function sourceUrl(path) {
+  if (!path || USE_LOCAL || /^(https?:|data:|blob:|\/\/)/i.test(path)) return path;
+  return REPO_RAW + path.replace(/^\.?\//, "");
+}
+
 let allProjects = [];
 let categoryOrder = []; // rækkefølgen af kategori-filtre, gemt i projects.json
 let activeCategory = "alle";
@@ -63,7 +72,7 @@ function buildFavicon() {
     link.rel = "icon";
     document.head.appendChild(link);
   }
-  link.href = SITE.favicon;
+  link.href = sourceUrl(SITE.favicon);
 }
 
 function buildHeader() {
@@ -199,7 +208,7 @@ buildChrome();
 
 async function loadProjects() {
   try {
-    const res = await fetch("projects.json", { cache: "no-store" });
+    const res = await fetch(sourceUrl("projects.json"), { cache: "no-store" });
     const data = await res.json();
     if (Array.isArray(data)) {
       // Gammelt format (fra før kategori-rækkefølge fandtes) — læses stadig fint.
@@ -235,11 +244,13 @@ function renderGrid() {
     .map((p, i) => {
       const isVideo = Boolean(p.videoUrl);
       const ratio = ratioToCss(p.aspectRatio);
+      const rows = ratioRowSpan(p.aspectRatio);
+      const ratioStyle = !ratio ? "" : rows ? `;--ratio:${ratio};--rows:${rows}` : `;aspect-ratio:${ratio}`;
       const bg = p.thumbnail
-        ? `background-image:url('${p.thumbnail}')`
+        ? `background-image:url('${sourceUrl(p.thumbnail)}')`
         : `background:linear-gradient(135deg, ${p.coverColor || "#222"}, #0a0a0a)`;
       return `
-        <article class="card ${isVideo ? "card-video" : "card-foto"}${ratio ? " card-custom-ratio" : ""}" data-id="${p.id}" style="--i:${i}${ratio ? ";aspect-ratio:" + ratio : ""}" tabindex="0" role="button" aria-label="${escapeHtml(p.title || p.category)}">
+        <article class="card ${isVideo ? "card-video" : "card-foto"}${ratio ? " card-custom-ratio" : ""}${rows ? " card-tall" : ""}" data-id="${p.id}" style="--i:${i}${ratioStyle}" tabindex="0" role="button" aria-label="${escapeHtml(p.title || p.category)}">
           <div class="card-media" style="${bg}"></div>
           ${isVideo ? `<div class="card-video-preview" aria-hidden="true"></div><span class="play-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><polygon points="8,5 20,12 8,19"></polygon></svg></span>` : ""}
           <div class="overlay">
@@ -377,6 +388,16 @@ function ratioToCss(value) {
   return m ? `${m[1]} / ${m[2]}` : "";
 }
 
+// Portrait/square cards span several grid rows (each row = one 16:9 photo),
+// so the neighbouring photos fill the space beside them. 0 = no spanning.
+function ratioRowSpan(value) {
+  const m = (value || "").trim().match(/^(\d+(?:\.\d+)?)\s*[:\/]\s*(\d+(?:\.\d+)?)$/);
+  if (!m) return 0;
+  const hw = parseFloat(m[2]) / parseFloat(m[1]);
+  if (hw < 0.9) return 0;
+  return Math.max(2, Math.round(hw / (9 / 16)));
+}
+
 function openLightbox(id) {
   const p = allProjects.find((proj) => proj.id === id);
   if (!p) return;
@@ -398,7 +419,7 @@ function openLightbox(id) {
       // Non-YouTube video link (e.g. Vimeo) — plain embed, no volume control available.
       mediaEl.innerHTML = `<iframe src="${toEmbedUrl(p.videoUrl)}" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
     } else if (p.thumbnail) {
-      mediaEl.innerHTML = `<img src="${p.thumbnail}" alt="${escapeHtml(p.title || "Uden titel")}">`;
+      mediaEl.innerHTML = `<img src="${sourceUrl(p.thumbnail)}" alt="${escapeHtml(p.title || "Uden titel")}">`;
     } else {
       mediaEl.innerHTML = `<div style="width:100%;height:100%;background:linear-gradient(135deg, ${p.coverColor || "#222"}, #0a0a0a)"></div>`;
     }
