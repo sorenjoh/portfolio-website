@@ -316,11 +316,25 @@ function setupVideoHoverPreview(card, videoUrl) {
 function createVideoPreview(url) {
   const youTubeId = extractYouTubeId(url);
   if (youTubeId) {
+    const id = encodeURIComponent(youTubeId);
     const iframe = document.createElement("iframe");
-    iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(youTubeId)}?autoplay=1&mute=1&loop=1&playlist=${encodeURIComponent(youTubeId)}&controls=0&rel=0&playsinline=1`;
-    iframe.allow = "autoplay; encrypted-media";
+    iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&rel=0&playsinline=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
+    iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+    iframe.referrerPolicy = "strict-origin-when-cross-origin";
     iframe.tabIndex = -1;
     iframe.title = "";
+    // Nudge the player to start once it is ready; some browsers ignore
+    // autoplay=1 until an explicit play command arrives via the JS API.
+    iframe.addEventListener("load", () => {
+      const cmd = (func) => iframe.contentWindow && iframe.contentWindow.postMessage(
+        JSON.stringify({ event: "command", func, args: [] }), "*");
+      let tries = 0;
+      const timer = window.setInterval(() => {
+        cmd("mute");
+        cmd("playVideo");
+        if (++tries >= 10) window.clearInterval(timer);
+      }, 500);
+    });
     return iframe;
   }
 
