@@ -398,12 +398,18 @@ function ratioRowSpan(value) {
   return Math.max(2, Math.round(hw / (9 / 16)));
 }
 
+function isPortraitRatio(value) {
+  const m = (value || "").trim().match(/^(\d+(?:\.\d+)?)\s*[:\/]\s*(\d+(?:\.\d+)?)$/);
+  return Boolean(m && parseFloat(m[2]) > parseFloat(m[1]));
+}
+
 function openLightbox(id) {
   const p = allProjects.find((proj) => proj.id === id);
   if (!p) return;
 
   const mediaEl = document.getElementById("lightbox-media");
   mediaEl.style.aspectRatio = ratioToCss(p.aspectRatio) || "";
+  mediaEl.classList.toggle("lightbox-media-portrait", isPortraitRatio(p.aspectRatio));
   const volumeEl = document.getElementById("lightbox-volume");
   const youTubeId = p.videoUrl ? extractYouTubeId(p.videoUrl) : null;
 

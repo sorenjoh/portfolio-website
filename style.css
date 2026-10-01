@@ -207,8 +207,8 @@ body.subpage .site-title { font-size: clamp(1.7rem, 6vw, 3.6rem); }
    column, so e.g. a 9:16 video doesn't stretch across the whole grid */
 .grid .card.card-video.card-custom-ratio { grid-column: auto; }
 
-/* portrait/square cards span several photo rows; photos fill in beside them */
-.grid .card.card-tall { grid-row: span var(--rows, 2); aspect-ratio: auto; min-height: 100%; }
+/* custom portrait cards keep their exact shape and align side by side */
+.grid .card.card-tall { grid-row: auto; aspect-ratio: var(--ratio); min-height: 0; }
 
 .card-media {
   position: absolute;
@@ -436,6 +436,13 @@ body.subpage .site-title { font-size: clamp(1.7rem, 6vw, 3.6rem); }
   width: 100%;
   aspect-ratio: 16 / 9;
   background: #000;
+}
+
+.lightbox-media.lightbox-media-portrait {
+  width: auto;
+  height: min(76vh, calc(100dvh - 200px));
+  max-width: 100%;
+  margin-inline: auto;
 }
 
 .lightbox-media iframe,
