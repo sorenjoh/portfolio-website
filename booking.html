@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Booking — Søren Johansen</title>
+<!-- Fallback hvis JS ikke er kørt endnu; stien styres fra SITE.favicon i script.js -->
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="booking">
+
+<header class="site-header" id="site-header"></header>
+
+<main class="wrap">
+  <div class="page-content booking-page reveal" style="--d:400ms">
+    <h1>Booking</h1>
+    <p>
+      Fortæl kort om dit projekt — vælg ydelser, budget og evt. ekstra info.
+      Jeg vender tilbage på e-mail.
+    </p>
+
+    <form class="booking-form" id="booking-form" novalidate>
+      <fieldset class="booking-fieldset">
+        <legend>Ydelser</legend>
+        <p class="booking-hint">Vælg én eller flere</p>
+        <div class="booking-checks" id="booking-services"></div>
+      </fieldset>
+
+      <fieldset class="booking-fieldset">
+        <legend>Budget</legend>
+        <div class="booking-radios" id="booking-budgets"></div>
+      </fieldset>
+
+      <div class="booking-field">
+        <label for="booking-name">Navn</label>
+        <input type="text" id="booking-name" name="name" autocomplete="name" required>
+      </div>
+
+      <div class="booking-field">
+        <label for="booking-email">E-mail</label>
+        <input type="email" id="booking-email" name="email" autocomplete="email" required>
+      </div>
+
+      <div class="booking-field">
+        <label for="booking-message">Ekstra info</label>
+        <textarea id="booking-message" name="message" rows="5" placeholder="Fx dato, sted, stil eller andre ønsker…"></textarea>
+      </div>
+
+      <!-- Honeypot mod spam — skal forblive tom -->
+      <input type="text" name="_gotcha" class="booking-honeypot" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+      <button type="submit" class="booking-submit" id="booking-submit">Send forespørgsel</button>
+      <p class="booking-status" id="booking-status" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script src="script.js"></script>
+</body>
+</html>

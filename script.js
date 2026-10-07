@@ -21,6 +21,7 @@ const SITE = {
   nav: [
     { page: "work",    label: "Arbejde", href: "./" },
     { page: "bio",     label: "Bio",     href: "bio" },
+    { page: "booking", label: "Booking", href: "booking" },
     { page: "contact", label: "Kontakt", href: "contact" },
   ],
 
@@ -37,6 +38,22 @@ const SITE = {
     email: "soren@sorenfoto.com",
     links: [
       { label: "Instagram", url: "https://instagram.com/sorenfotos" }
+    ],
+  },
+
+  // Booking-formularen poster til Formsubmit, som sender e-mail til
+  // booking@sorenfoto.com (Cloudflare Email Routing videresender til indbakken).
+  booking: {
+    email: "booking@sorenfoto.com",
+    endpoint: "https://formsubmit.co/ajax/booking@sorenfoto.com",
+    services: ["Video", "Foto", "Videoredigering"],
+    budgets: [
+      "Under 5.000 kr.",
+      "5.000 – 10.000 kr.",
+      "10.000 – 25.000 kr.",
+      "25.000 – 50.000 kr.",
+      "Over 50.000 kr.",
+      "Ikke sikkert endnu",
     ],
   },
 };
@@ -148,6 +165,134 @@ function buildContactLinks() {
     .join("");
 }
 
+function buildBookingForm() {
+  const form = document.getElementById("booking-form");
+  if (!form) return;
+
+  const servicesHost = document.getElementById("booking-services");
+  const budgetsHost = document.getElementById("booking-budgets");
+  const statusEl = document.getElementById("booking-status");
+  const submitBtn = document.getElementById("booking-submit");
+  const cfg = SITE.booking;
+
+  if (servicesHost) {
+    servicesHost.innerHTML = cfg.services
+      .map((label, i) => {
+        const id = `booking-service-${i}`;
+        return `<label class="booking-check" for="${id}">
+          <input type="checkbox" id="${id}" name="services" value="${escapeHtml(label)}">
+          <span>${escapeHtml(label)}</span>
+        </label>`;
+      })
+      .join("");
+  }
+
+  if (budgetsHost) {
+    budgetsHost.innerHTML = cfg.budgets
+      .map((label, i) => {
+        const id = `booking-budget-${i}`;
+        return `<label class="booking-radio" for="${id}">
+          <input type="radio" id="${id}" name="budget" value="${escapeHtml(label)}"${i === 0 ? " required" : ""}>
+          <span>${escapeHtml(label)}</span>
+        </label>`;
+      })
+      .join("");
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!statusEl || !submitBtn) return;
+
+    const name = String(document.getElementById("booking-name")?.value || "").trim();
+    const email = String(document.getElementById("booking-email")?.value || "").trim();
+    const message = String(document.getElementById("booking-message")?.value || "").trim();
+    const services = Array.from(form.querySelectorAll('input[name="services"]:checked')).map(
+      (el) => el.value
+    );
+    const budgetEl = form.querySelector('input[name="budget"]:checked');
+    const budget = budgetEl ? budgetEl.value : "";
+    const honeypot = String(form.querySelector('input[name="_gotcha"]')?.value || "").trim();
+
+    statusEl.className = "booking-status";
+    statusEl.textContent = "";
+
+    if (honeypot) return; // stiltiende afvis spam-bots
+
+    if (!name || !email) {
+      statusEl.textContent = "Udfyld venligst navn og e-mail.";
+      statusEl.className = "booking-status err";
+      return;
+    }
+
+    if (services.length === 0) {
+      statusEl.textContent = "Vælg mindst én ydelse.";
+      statusEl.className = "booking-status err";
+      return;
+    }
+
+    if (!budget) {
+      statusEl.textContent = "Vælg et budget.";
+      statusEl.className = "booking-status err";
+      return;
+    }
+
+    submitBtn.disabled = true;
+    statusEl.textContent = "Sender…";
+
+    const payload = {
+      name,
+      email,
+      _replyto: email,
+      _subject: `Bookingforespørgsel fra ${name}`,
+      Ydelser: services.join(", "),
+      Budget: budget,
+      "Ekstra info": message || "(ingen)",
+      _template: "table",
+      _captcha: "false",
+    };
+
+    try {
+      const res = await fetch(cfg.endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message || `Serveren svarede med ${res.status}`);
+      }
+
+      form.reset();
+      statusEl.textContent = "Tak — din forespørgsel er sendt. Jeg vender tilbage snarest.";
+      statusEl.className = "booking-status ok";
+    } catch (err) {
+      console.error(err);
+      const bodyLines = [
+        `Navn: ${name}`,
+        `E-mail: ${email}`,
+        `Ydelser: ${services.join(", ")}`,
+        `Budget: ${budget}`,
+        "",
+        "Ekstra info:",
+        message || "(ingen)",
+      ];
+      const mailto =
+        `mailto:${cfg.email}` +
+        `?subject=${encodeURIComponent("Bookingforespørgsel fra " + name)}` +
+        `&body=${encodeURIComponent(bodyLines.join("\n"))}`;
+      statusEl.innerHTML =
+        `Kunne ikke sende automatisk. ` +
+        `<a href="${mailto}">Åbn e-mail i stedet</a> — eller skriv direkte til ${escapeHtml(cfg.email)}.`;
+      statusEl.className = "booking-status err";
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+}
+
 function buildFooter() {
   const host = document.getElementById("site-footer");
   if (!host) return;
@@ -195,6 +340,7 @@ function buildChrome() {
   buildFavicon();
   buildHeader();
   buildContactLinks();
+  buildBookingForm();
   buildFooter();
   buildLightbox();
 }
