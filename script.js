@@ -383,6 +383,7 @@ function renderGrid() {
 
   if (filtered.length === 0) {
     grid.innerHTML = `<div class="empty-state">Ingen projekter i denne kategori endnu.</div>`;
+    grid.style.height = "";
     return;
   }
 
@@ -390,13 +391,12 @@ function renderGrid() {
     .map((p, i) => {
       const isVideo = Boolean(p.videoUrl);
       const ratio = ratioToCss(p.aspectRatio);
-      const rows = ratioRowSpan(p.aspectRatio);
-      const ratioStyle = !ratio ? "" : rows ? `;--ratio:${ratio};--rows:${rows}` : `;aspect-ratio:${ratio}`;
+      const ratioStyle = ratio ? `;aspect-ratio:${ratio}` : "";
       const bg = p.thumbnail
         ? `background-image:url('${sourceUrl(p.thumbnail)}')`
         : `background:linear-gradient(135deg, ${p.coverColor || "#222"}, #0a0a0a)`;
       return `
-        <article class="card ${isVideo ? "card-video" : "card-foto"}${ratio ? " card-custom-ratio" : ""}${rows ? " card-tall" : ""}" data-id="${p.id}" style="--i:${i}${ratioStyle}" tabindex="0" role="button" aria-label="${escapeHtml(p.title || p.category)}">
+        <article class="card ${isVideo ? "card-video" : "card-foto"}${ratio ? " card-custom-ratio" : ""}" data-id="${p.id}" style="--i:${i}${ratioStyle}" tabindex="0" role="button" aria-label="${escapeHtml(p.title || p.category)}">
           <div class="card-media" style="${bg}"></div>
           ${isVideo ? `<div class="card-video-preview" aria-hidden="true"></div><span class="play-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><polygon points="8,5 20,12 8,19"></polygon></svg></span>` : ""}
           <div class="overlay">
@@ -419,6 +419,59 @@ function renderGrid() {
       }
     });
   });
+  layoutProjectGrid(grid);
+  observeProjectGrid(grid);
+}
+
+// Pack each card into the shortest column, preserving its exact aspect ratio.
+// Full-width videos start below both columns, never overlapping earlier cards.
+function projectCardLayout(items, width, columns, gap) {
+  const columnWidth = (width - gap * (columns - 1)) / columns;
+  const bottoms = Array(columns).fill(0);
+  const cards = items.map(({ ratio, fullWidth }) => {
+    const span = fullWidth ? columns : 1;
+    const column = span === columns ? 0 : bottoms.indexOf(Math.min(...bottoms));
+    const top = span === columns ? Math.max(...bottoms) : bottoms[column];
+    const cardWidth = span === columns ? width : columnWidth;
+    const height = cardWidth / ratio;
+    for (let i = column; i < column + span; i++) bottoms[i] = top + height + gap;
+    return { left: column * (columnWidth + gap), top, width: cardWidth, height };
+  });
+  return { cards, height: Math.max(0, ...bottoms) - (items.length ? gap : 0) };
+}
+
+function layoutProjectGrid(grid) {
+  const cards = [...grid.querySelectorAll(".card")];
+  if (!cards.length || !grid.clientWidth) return;
+  const styles = getComputedStyle(grid);
+  const columns = window.matchMedia("(max-width: 860px)").matches ? 1 : 2;
+  const gap = parseFloat(styles.gap) || 0;
+  const items = cards.map((card) => {
+    const parts = getComputedStyle(card).aspectRatio.split("/").map(Number);
+    const ratio = parts[0] / (parts[1] || 1);
+    return {
+      ratio: Number.isFinite(ratio) && ratio > 0 ? ratio : 16 / 9,
+      fullWidth: card.classList.contains("card-video") && !card.classList.contains("card-custom-ratio"),
+    };
+  });
+  const layout = projectCardLayout(items, grid.clientWidth, columns, gap);
+  cards.forEach((card, i) => {
+    const box = layout.cards[i];
+    Object.assign(card.style, { left: `${box.left}px`, top: `${box.top}px`, width: `${box.width}px`, height: `${box.height}px` });
+  });
+  grid.style.height = `${layout.height + (parseFloat(styles.paddingBottom) || 0)}px`;
+}
+
+let projectGridObserver;
+function observeProjectGrid(grid) {
+  if (projectGridObserver) return;
+  let previousWidth = grid.clientWidth;
+  projectGridObserver = new ResizeObserver(() => {
+    if (grid.clientWidth === previousWidth) return;
+    previousWidth = grid.clientWidth;
+    layoutProjectGrid(grid);
+  });
+  projectGridObserver.observe(grid);
 }
 
 function setupVideoHoverPreview(card, videoUrl) {
@@ -532,16 +585,6 @@ function ratioToCss(value) {
   if (!raw) return "";
   const m = raw.match(/^(\d+(?:\.\d+)?)\s*[:\/]\s*(\d+(?:\.\d+)?)$/);
   return m ? `${m[1]} / ${m[2]}` : "";
-}
-
-// Portrait/square cards span several grid rows (each row = one 16:9 photo),
-// so the neighbouring photos fill the space beside them. 0 = no spanning.
-function ratioRowSpan(value) {
-  const m = (value || "").trim().match(/^(\d+(?:\.\d+)?)\s*[:\/]\s*(\d+(?:\.\d+)?)$/);
-  if (!m) return 0;
-  const hw = parseFloat(m[2]) / parseFloat(m[1]);
-  if (hw < 0.9) return 0;
-  return Math.max(2, Math.round(hw / (9 / 16)));
 }
 
 function isPortraitRatio(value) {
