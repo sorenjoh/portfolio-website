@@ -371,6 +371,66 @@ async function loadProjects() {
   }
   renderFilterBar();
   renderGrid();
+  fillMissingVideoTitles();
+}
+
+// Henter videoens standardtitel (fx YouTube-titlen via oEmbed) for projekter
+// uden titel, sa kort og lightbox altid har en titel. Caches i localStorage.
+const videoTitleCache = (() => {
+  try {
+    return JSON.parse(localStorage.getItem("videoTitleCache") || "{}");
+  } catch {
+    return {};
+  }
+})();
+
+function saveVideoTitleCache() {
+  try {
+    localStorage.setItem("videoTitleCache", JSON.stringify(videoTitleCache));
+  } catch {
+    /* ignorer */
+  }
+}
+
+async function fetchVideoDefaultTitle(videoUrl) {
+  const youTubeId = extractYouTubeId(videoUrl);
+  const watchUrl = youTubeId
+    ? `https://www.youtube.com/watch?v=${youTubeId}`
+    : videoUrl;
+  const cacheKey = youTubeId || videoUrl;
+  if (videoTitleCache[cacheKey]) return videoTitleCache[cacheKey];
+  try {
+    const endpoint = youTubeId
+      ? `https://www.youtube.com/oembed?url=${encodeURIComponent(watchUrl)}&format=json`
+      : `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(videoUrl)}`;
+    const res = await fetch(endpoint);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const title = (data.title || "").trim();
+    if (title) {
+      videoTitleCache[cacheKey] = title;
+      saveVideoTitleCache();
+    }
+    return title || null;
+  } catch {
+    return null;
+  }
+}
+
+async function fillMissingVideoTitles() {
+  const targets = allProjects.filter((p) => p.videoUrl && !p.title);
+  if (targets.length === 0) return;
+  let changed = false;
+  await Promise.all(
+    targets.map(async (p) => {
+      const title = await fetchVideoDefaultTitle(p.videoUrl);
+      if (title && !p.title) {
+        p.title = title;
+        changed = true;
+      }
+    })
+  );
+  if (changed) renderGrid();
 }
 
 function renderGrid() {
